@@ -9,6 +9,8 @@ RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 COPY . .
+# Base SQLite temporaire pour le prerender au build (le runtime utilisera Postgres via DATABASE_URL)
+RUN npx drizzle-kit push --config=drizzle.sqlite.config.ts && npx tsx scripts/seed.ts
 RUN npm run build
 
 # ── Runtime ────────────────────────────────────────────
