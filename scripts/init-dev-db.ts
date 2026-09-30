@@ -73,6 +73,7 @@ sqlite.exec(`
   );
 `);
 
+sqlite.pragma("foreign_keys = OFF"); // les ids démo ne sont pas toujours cohérents
 const db = drizzle(sqlite, { schema });
 
 async function main() {
@@ -83,10 +84,9 @@ async function main() {
   }
   await db.insert(schema.categories).values(
     CATEGORIES.map((c) => ({
-      id: c.id,
+      id: c.slug, // categoryId des produits démo référence le slug
       slug: c.slug,
       name: c.name,
-      description: c.description,
     }))
   );
   await db.insert(schema.products).values(
