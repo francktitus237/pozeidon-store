@@ -1,9 +1,8 @@
-import { drizzle } from "drizzle-orm/better-sqlite3";
-import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
-// Dev local : fichier SQLite à la racine du projet.
-// Prod : basculer sur Postgres (Neon) en remplaçant par drizzle-orm/postgres-js.
-const sqlite = new Database(process.env.DATABASE_URL ?? "dev.db");
+// PostgreSQL via DATABASE_URL (Dokploy Postgres, Neon, Supabase…)
+const client = postgres(process.env.DATABASE_URL!, { prepare: false });
 
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(client, { schema });

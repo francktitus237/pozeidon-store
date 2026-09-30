@@ -1,10 +1,14 @@
 import {
-  sqliteTable,
+  pgTable,
   text,
   integer,
-} from "drizzle-orm/sqlite-core";
+  boolean,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
+import type { CartItem } from "@/types";
 
-export const categories = sqliteTable("categories", {
+export const categories = pgTable("categories", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
@@ -12,7 +16,7 @@ export const categories = sqliteTable("categories", {
   image: text("image"),
 });
 
-export const products = sqliteTable("products", {
+export const products = pgTable("products", {
   id: text("id").primaryKey(),
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
@@ -25,19 +29,17 @@ export const products = sqliteTable("products", {
   categoryId: text("category_id")
     .notNull()
     .references(() => categories.id),
-  images: text("images", { mode: "json" }).notNull().default([]),
+  images: jsonb("images").$type<string[]>().notNull().default([]),
   videoUrl: text("video_url"),
-  installationAvailable: integer("installation_available", {
-    mode: "boolean",
-  })
+  installationAvailable: boolean("installation_available")
     .notNull()
     .default(false),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at")
     .notNull()
-    .$defaultFn(() => new Date()),
+    .defaultNow(),
 });
 
-export const orders = sqliteTable("orders", {
+export const orders = pgTable("orders", {
   id: text("id").primaryKey(),
   number: text("number").notNull().unique(),
   customerName: text("customer_name").notNull(),
@@ -47,38 +49,38 @@ export const orders = sqliteTable("orders", {
   city: text("city").notNull(),
   district: text("district").notNull(),
   landmark: text("landmark"),
-  items: text("items", { mode: "json" }).notNull(),
+  items: jsonb("items").$type<CartItem[]>().notNull(),
   subtotal: integer("subtotal").notNull(),
   deliveryFee: integer("delivery_fee").notNull().default(0),
   total: integer("total").notNull(),
   paymentMethod: text("payment_method").notNull(),
   promoCode: text("promo_code"),
   status: text("status").notNull().default("pending"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at")
     .notNull()
-    .$defaultFn(() => new Date()),
+    .defaultNow(),
 });
 
-export const settings = sqliteTable("settings", {
+export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
+  updatedAt: timestamp("updated_at")
     .notNull()
-    .$defaultFn(() => new Date()),
+    .defaultNow(),
 });
 
-export const installationRequests = sqliteTable("installation_requests", {
+export const installationRequests = pgTable("installation_requests", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   phone: text("phone").notNull(),
   city: text("city").notNull(),
   district: text("district").notNull(),
   placeType: text("place_type").notNull(),
-  hasKit: integer("has_kit", { mode: "boolean" }).notNull().default(false),
+  hasKit: boolean("has_kit").notNull().default(false),
   description: text("description"),
   photoUrl: text("photo_url"),
   status: text("status").notNull().default("new"),
-  createdAt: integer("created_at", { mode: "timestamp" })
+  createdAt: timestamp("created_at")
     .notNull()
-    .$defaultFn(() => new Date()),
+    .defaultNow(),
 });

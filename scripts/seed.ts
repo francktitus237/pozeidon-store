@@ -1,4 +1,4 @@
-// Seed de la base SQLite locale : catégories + produits de démo
+// Seed de la base PostgreSQL (DATABASE_URL dans .env.local)
 // Lancer avec : npx tsx scripts/seed.ts
 
 import { db } from "@/lib/db";
