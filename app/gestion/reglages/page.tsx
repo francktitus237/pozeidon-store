@@ -1,0 +1,28 @@
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import { getAnnouncement } from "@/lib/settings";
+import { BannerSettingsForm } from "@/components/admin/banner-settings-form";
+
+export default async function AdminSettingsPage() {
+  const session = await auth();
+  if (!session) redirect("/connexion");
+
+  const announcement = await getAnnouncement();
+
+  return (
+    <div className="flex flex-col gap-6">
+      <h1 className="text-2xl font-bold text-navy-900">Réglages</h1>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Bannière d&apos;annonce
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Texte affiché dans la barre en haut de chaque page. Vous pouvez
+          ajouter un lien et changer la couleur.
+        </p>
+        <BannerSettingsForm announcement={announcement} />
+      </div>
+    </div>
+  );
+}
