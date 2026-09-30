@@ -10,7 +10,7 @@ RUN npm ci
 
 COPY . .
 # Base SQLite temporaire pour le prerender au build (le runtime utilisera Postgres via DATABASE_URL)
-RUN npx drizzle-kit push --force --config=drizzle.sqlite.config.ts && npx tsx scripts/seed.ts
+RUN npx tsx scripts/init-dev-db.ts
 RUN npm run build
 
 # ── Runtime ────────────────────────────────────────────
