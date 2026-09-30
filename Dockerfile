@@ -4,6 +4,8 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY package.json package-lock.json ./
+# Outils natifs pour compiler better-sqlite3 (pas de prebuild musl)
+RUN apk add --no-cache python3 make g++
 RUN npm ci
 
 COPY . .
