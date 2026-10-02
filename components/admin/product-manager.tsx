@@ -2,7 +2,15 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Plus, Pencil, Trash2, Upload } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Upload,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +49,6 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   on_order: { label: "Sur commande", className: "bg-stock-order text-white" },
   out_of_stock: { label: "Épuisé", className: "bg-stock-out text-white" },
 };
-
 export function ProductManager({
   rows,
   categories,
@@ -49,6 +56,22 @@ export function ProductManager({
   rows: Row[];
   categories: { id: string; name: string }[];
 }) {
+  const PAGE_SIZE = 10;
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const filtered = rows.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.reference.toLowerCase().includes(search.toLowerCase())
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   const [editing, setEditing] = useState<Row | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<Row | null>(null);
@@ -316,7 +339,10 @@ export function ProductManager({
       </Dialog>
 
       {/* Popup confirmation suppression */}
-      <Dialog open={deleting !== null} onOpenChange={(open) => !open && setDeleting(null)}>
+      <Dialog
+        open={deleting !== null}
+        onOpenChange={(open) => !open && setDeleting(null)}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Supprimer cet article ?</DialogTitle>
@@ -338,6 +364,25 @@ export function ProductManager({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Recherche */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 sm:max-w-xs">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Rechercher un article…"
+            className="pl-9"
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          {filtered.length} article{filtered.length > 1 ? "s" : ""}
+        </p>
+      </div>
 
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full text-sm">
@@ -417,6 +462,28 @@ export function ProductManager({
           </tbody>
         </table>
       </div>
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between">
+          <Button
+            variant="outline"
+            disabled={currentPage <= 1}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            <ChevronLeft className="mr-1 h-4 w-4" /> Précédent
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Page {currentPage} / {pageCount}
+          </p>
+          <Button
+            variant="outline"
+            disabled={currentPage >= pageCount}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            Suivant <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

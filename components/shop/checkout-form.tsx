@@ -45,25 +45,32 @@ export function CheckoutForm() {
     setError("");
     setLoading(true);
     const fd = new FormData(e.currentTarget);
-    const result = await createOrder({
-      customerName: String(fd.get("customerName") ?? ""),
-      phone: String(fd.get("phone") ?? ""),
-      whatsapp: String(fd.get("whatsapp") ?? ""),
-      email: String(fd.get("email") ?? ""),
-      city,
-      district: String(fd.get("district") ?? ""),
-      landmark: String(fd.get("landmark") ?? ""),
-      items,
-      paymentMethod: payment,
-    });
-    setLoading(false);
+    try {
+      const result = await createOrder({
+        customerName: String(fd.get("customerName") ?? ""),
+        phone: String(fd.get("phone") ?? ""),
+        whatsapp: String(fd.get("whatsapp") ?? ""),
+        email: String(fd.get("email") ?? ""),
+        city,
+        district: String(fd.get("district") ?? ""),
+        landmark: String(fd.get("landmark") ?? ""),
+        items,
+        paymentMethod: payment,
+      });
 
-    if ("error" in result && result.error) {
-      setError(result.error);
-      return;
+      if ("error" in result && result.error) {
+        setError(result.error);
+        return;
+      }
+      clearCart();
+      router.push(`/commande/confirmation?numero=${result.number}`);
+    } catch {
+      setError(
+        "Une erreur est survenue lors de l'enregistrement. Réessayez ou contactez-nous sur WhatsApp."
+      );
+    } finally {
+      setLoading(false);
     }
-    clearCart();
-    router.push(`/commande/confirmation?numero=${result.number}`);
   }
 
   return (
