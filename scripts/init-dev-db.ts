@@ -109,7 +109,7 @@ async function main() {
     key: "announcement",
     value: JSON.stringify({
       enabled: true,
-      text: "Kits & accessoires Starlink · Accessoires informatique · Livraison Douala & Yaoundé · Installation certifiée",
+      text: "Accessoires Starlink · Accessoires informatique · Installation certifiée · Livraison express Douala & Yaoundé",
       link: "",
       bg: "navy",
     }),
