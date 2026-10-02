@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
+import { PaginatedTable } from "@/components/admin/paginated-table";
 import { Phone } from "lucide-react";
 
 export default async function AdminClientsPage() {
@@ -43,19 +44,11 @@ export default async function AdminClientsPage() {
           Aucun client pour l&apos;instant.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Nom</th>
-                <th className="px-4 py-3 font-medium">Téléphone</th>
-                <th className="px-4 py-3 font-medium">Ville</th>
-                <th className="px-4 py-3 font-medium">Commandes</th>
-                <th className="px-4 py-3 font-medium">Total achats</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((c) => (
+        <PaginatedTable
+          headers={["Nom", "Téléphone", "Ville", "Commandes", "Total achats"]}
+          pageSize={10}
+        >
+          {rows.map((c) => (
                 <tr key={c.phone + c.name} className="border-b last:border-0">
                   <td className="px-4 py-3 font-medium">{c.name}</td>
                   <td className="px-4 py-3">
@@ -72,10 +65,8 @@ export default async function AdminClientsPage() {
                     {formatPrice(c.total)}
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+          ))}
+        </PaginatedTable>
       )}
     </div>
   );

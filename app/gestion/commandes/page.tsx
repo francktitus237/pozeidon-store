@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
+import { PaginatedTable } from "@/components/admin/paginated-table";
 import type { OrderStatus } from "@/types";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -31,23 +32,21 @@ export default async function AdminOrdersPage() {
           Aucune commande enregistrée pour l&apos;instant.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-muted-foreground">
-                <th className="px-4 py-3 font-medium">N°</th>
-                <th className="px-4 py-3 font-medium">Date</th>
-                <th className="px-4 py-3 font-medium">Client</th>
-                <th className="px-4 py-3 font-medium">Livraison</th>
-                <th className="px-4 py-3 font-medium">Articles</th>
-                <th className="px-4 py-3 font-medium">Montant</th>
-                <th className="px-4 py-3 font-medium">Paiement</th>
-                <th className="px-4 py-3 font-medium">Statut</th>
-                <th className="px-4 py-3 font-medium">Contact</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((o) => {
+        <PaginatedTable
+          headers={[
+            "N°",
+            "Date",
+            "Client",
+            "Livraison",
+            "Articles",
+            "Montant",
+            "Paiement",
+            "Statut",
+            "Contact",
+          ]}
+          pageSize={10}
+        >
+          {rows.map((o) => {
                 const itemCount = o.items.reduce((s, i) => s + i.quantity, 0);
                 const waPhone = o.whatsapp || o.phone;
                 return (
@@ -102,9 +101,7 @@ export default async function AdminOrdersPage() {
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+        </PaginatedTable>
       )}
     </div>
   );

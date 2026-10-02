@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { installationRequests } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";
-
+import { PaginatedUl } from "@/components/admin/paginated-table";
 const STATUS_LABEL: Record<string, { label: string; className: string }> = {
   new: { label: "Nouvelle", className: "bg-stock-order text-white" },
   quoted: { label: "Devis envoyé", className: "bg-sky-500 text-white" },
@@ -25,7 +25,7 @@ export default async function AdminInstallationsPage() {
           Aucune demande d&apos;installation pour l&apos;instant.
         </div>
       ) : (
-        <ul className="divide-y rounded-lg border bg-card text-sm">
+        <PaginatedUl pageSize={10}>
           {rows.map((r) => {
             const s = STATUS_LABEL[r.status] ?? STATUS_LABEL.new;
             return (
@@ -41,7 +41,7 @@ export default async function AdminInstallationsPage() {
               </li>
             );
           })}
-        </ul>
+        </PaginatedUl>
       )}
     </div>
   );
