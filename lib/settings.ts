@@ -10,7 +10,7 @@ export interface Announcement {
 }
 
 const DEFAULT_ANNOUNCEMENT: Announcement = {
-  text: "Livraison Douala & Yaoundé sous 24 h · Installation par technicien certifié",
+  text: "Kits & accessoires Starlink · Accessoires informatique · Livraison Douala & Yaoundé · Installation certifiée",
   enabled: true,
   bg: "navy",
 };
