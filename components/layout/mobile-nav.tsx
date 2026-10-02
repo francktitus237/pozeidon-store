@@ -28,7 +28,7 @@ export function MobileNav() {
       >
         <Menu className="h-6 w-6" />
       </SheetTrigger>
-      <SheetContent side="left" className="w-72 p-0">
+      <SheetContent side="left" className="flex w-72 flex-col overflow-y-auto p-0">
         <div className="flex items-center justify-between border-b p-4">
           <div className="flex items-center gap-2">
             <Image
@@ -63,22 +63,24 @@ export function MobileNav() {
           ))}
         </nav>
 
-        <p className="border-t px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-          Catégories
-        </p>
-        <nav className="flex flex-col p-2">
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.slug}
-              href={`/boutique/${c.slug}`}
-              onClick={() => setOpen(false)}
-              className="flex items-center justify-between rounded-md px-3 py-2.5 text-sm hover:bg-sky-50 hover:text-navy-900"
-            >
-              {c.name}
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          ))}
-        </nav>
+        <div className="flex-1 pb-4">
+          <p className="border-t px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Catégories
+          </p>
+          <nav className="flex flex-col px-2">
+            {CATEGORIES.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/boutique/${c.slug}`}
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-between rounded-md px-3 py-2.5 text-sm hover:bg-sky-50 hover:text-navy-900"
+              >
+                {c.name}
+                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              </Link>
+            ))}
+          </nav>
+        </div>
       </SheetContent>
     </Sheet>
   );

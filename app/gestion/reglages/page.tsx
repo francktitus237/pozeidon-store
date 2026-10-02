@@ -1,13 +1,17 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getAnnouncement } from "@/lib/settings";
+import { getAnnouncement, getCookieBanner } from "@/lib/settings";
 import { BannerSettingsForm } from "@/components/admin/banner-settings-form";
+import { CookieSettingsForm } from "@/components/admin/cookie-settings-form";
 
 export default async function AdminSettingsPage() {
   const session = await auth();
   if (!session) redirect("/connexion");
 
-  const announcement = await getAnnouncement();
+  const [announcement, cookieBanner] = await Promise.all([
+    getAnnouncement(),
+    getCookieBanner(),
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -18,10 +22,21 @@ export default async function AdminSettingsPage() {
           Bannière d&apos;annonce
         </h2>
         <p className="mb-5 text-sm text-muted-foreground">
-          Texte affiché dans la barre en haut de chaque page. Vous pouvez
+          Texte affiché dans la barre animée en haut de chaque page. Vous pouvez
           ajouter un lien et changer la couleur.
         </p>
         <BannerSettingsForm announcement={announcement} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Bannière cookies
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Bandeau de consentement affiché aux nouveaux visiteurs. Le choix est
+          mémorisé dans leur navigateur.
+        </p>
+        <CookieSettingsForm config={cookieBanner} />
       </div>
     </div>
   );

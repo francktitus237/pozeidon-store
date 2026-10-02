@@ -8,7 +8,8 @@ export const CATEGORIES = [
   { slug: "energie-onduleurs", name: "Énergie & onduleurs" },
   { slug: "protection-etancheite", name: "Protection & étanchéité" },
   { slug: "antennes-routeurs", name: "Antennes & routeurs" },
-  { slug: "kits-starlink", name: "Kits Starlink" },
+  { slug: "accessoires-starlink", name: "Accessoires Starlink" },
+  { slug: "accessoires-informatique", name: "Accessoires informatique" },
   { slug: "promotions", name: "Promotions" },
 ] as const;
 

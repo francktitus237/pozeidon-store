@@ -37,3 +37,31 @@ export async function getAnnouncement(): Promise<Announcement> {
     return DEFAULT_ANNOUNCEMENT;
   }
 }
+
+export interface CookieBanner {
+  enabled: boolean;
+  text: string;
+  acceptLabel: string;
+  declineLabel: string;
+  policyLink?: string;
+}
+
+const DEFAULT_COOKIE_BANNER: CookieBanner = {
+  enabled: true,
+  text: "Ce site utilise des cookies pour améliorer votre expérience de navigation et mémoriser votre panier.",
+  acceptLabel: "J'accepte",
+  declineLabel: "Refuser",
+};
+
+export async function getCookieBanner(): Promise<CookieBanner> {
+  const row = await db.query.settings.findFirst({
+    where: eq(settings.key, "cookie_banner"),
+  });
+  if (!row) return DEFAULT_COOKIE_BANNER;
+  try {
+    const parsed = JSON.parse(row.value) as Partial<CookieBanner>;
+    return { ...DEFAULT_COOKIE_BANNER, ...parsed };
+  } catch {
+    return DEFAULT_COOKIE_BANNER;
+  }
+}
