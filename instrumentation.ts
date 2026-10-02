@@ -77,8 +77,50 @@ export async function register() {
         created_at TIMESTAMP NOT NULL DEFAULT now()
       )`;
     console.log("[db] Schéma Postgres vérifié/créé.");
+
+    // ── Seed initial si la base est vide (premier déploiement) ──
+    const [{ count: catCount }] = await sql<
+      { count: string }[]
+    >`SELECT COUNT(*)::text AS count FROM categories`;
+
+    if (Number(catCount) === 0) {
+      const { CATEGORIES } = await import("./lib/constants");
+      for (const c of CATEGORIES) {
+        await sql`
+          INSERT INTO categories (id, slug, name)
+          VALUES (${c.slug}, ${c.slug}, ${c.name})
+          ON CONFLICT (slug) DO NOTHING`;
+      }
+      console.log(`[db] ${CATEGORIES.length} catégories insérées.`);
+    }
+
+    const [{ count: prodCount }] = await sql<
+      { count: string }[]
+    >`SELECT COUNT(*)::text AS count FROM products`;
+
+    if (Number(prodCount) === 0) {
+      const { DEMO_PRODUCTS } = await import(
+        "./features/products/data"
+      );
+      for (const p of DEMO_PRODUCTS) {
+        await sql`
+          INSERT INTO products (
+            id, slug, name, reference, description, price, promo_price,
+            stock, status, category_id, images, video_url,
+            installation_available
+          ) VALUES (
+            ${p.id}, ${p.slug}, ${p.name}, ${p.reference},
+            ${p.description ?? null}, ${p.price}, ${p.promoPrice ?? null},
+            ${p.stock}, ${p.status}, ${p.categoryId},
+            ${sql.json(p.images)}, ${p.videoUrl ?? null},
+            ${p.installationAvailable}
+          )
+          ON CONFLICT (id) DO NOTHING`;
+      }
+      console.log(`[db] ${DEMO_PRODUCTS.length} produits démo insérés.`);
+    }
   } catch (e) {
-    console.error("[db] Échec création schéma Postgres :", e);
+    console.error("[db] Échec init Postgres :", e);
   } finally {
     await sql.end();
   }
