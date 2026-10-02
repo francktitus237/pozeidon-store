@@ -56,7 +56,7 @@ export function ProductManager({
   rows: Row[];
   categories: { id: string; name: string }[];
 }) {
-  const PAGE_SIZE = 8;
+  const PAGE_SIZE = 6;
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
@@ -397,29 +397,31 @@ export function ProductManager({
             </tr>
           </thead>
           <tbody>
-            {rows.map((p) => {
+            {pageRows.map((p) => {
               const s = STATUS_LABEL[p.status] ?? STATUS_LABEL.in_stock;
               const img = (p.images as string[] | null)?.[0];
               return (
                 <tr key={p.id} className="border-b last:border-0">
-                  <td className="flex items-center gap-3 px-4 py-3">
+                  <td className="flex items-center gap-2 px-4 py-2">
                     {img ? (
                       <Image
                         src={img}
                         alt={p.name}
-                        width={40}
-                        height={40}
-                        className="h-10 w-10 rounded-md object-cover"
+                        width={32}
+                        height={32}
+                        className="h-8 w-8 rounded-md object-cover"
                       />
                     ) : (
-                      <div className="h-10 w-10 rounded-md bg-sky-100" />
+                      <div className="h-8 w-8 rounded-md bg-sky-100" />
                     )}
-                    <span className="font-medium">{p.name}</span>
+                    <span className="max-w-48 truncate font-medium">
+                      {p.name}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
+                  <td className="px-4 py-2 text-muted-foreground">
                     {p.reference}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2">
                     {p.promoPrice ? (
                       <span>
                         <span className="font-semibold text-cta-600">
@@ -433,11 +435,11 @@ export function ProductManager({
                       formatPrice(p.price)
                     )}
                   </td>
-                  <td className="px-4 py-3">{p.stock}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2">{p.stock}</td>
+                  <td className="px-4 py-2">
                     <Badge className={s.className}>{s.label}</Badge>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-2">
                     <div className="flex gap-1">
                       <button
                         onClick={() => openEdit(p)}
