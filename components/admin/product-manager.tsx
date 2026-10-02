@@ -56,7 +56,7 @@ export function ProductManager({
   rows: Row[];
   categories: { id: string; name: string }[];
 }) {
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 10;
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
 
