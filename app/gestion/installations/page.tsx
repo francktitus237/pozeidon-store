@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { installationRequests } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";

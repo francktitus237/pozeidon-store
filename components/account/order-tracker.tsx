@@ -1,7 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Package, MessageCircle } from "lucide-react";
+import {
+  Search,
+  Package,
+  MessageCircle,
+  Check,
+  Truck,
+  XCircle,
+  MapPin,
+  CreditCard,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trackOrder } from "@/features/orders/actions";
@@ -16,6 +25,19 @@ const STATUS_LABEL: Record<string, string> = {
   delivered: "Livrée",
   cancelled: "Annulée",
 };
+
+const PAYMENT_LABEL: Record<string, string> = {
+  mtn_momo: "MTN Mobile Money",
+  orange_money: "Orange Money",
+  cash_on_delivery: "Paiement à la livraison",
+};
+
+const STEPS = [
+  { key: "pending", label: "Reçue" },
+  { key: "confirmed", label: "Confirmée" },
+  { key: "preparing", label: "Préparation" },
+  { key: "delivered", label: "Livrée" },
+];
 
 export function OrderTracker() {
   const [number, setNumber] = useState("");
@@ -85,52 +107,142 @@ export function OrderTracker() {
       )}
 
       {order && (
-        <div className="mt-6 space-y-4 rounded-lg border bg-sky-50 p-4">
-          <div className="flex items-start justify-between">
+        <div className="mt-6 rounded-lg border bg-card">
+          {/* En-tête */}
+          <div className="flex items-center justify-between border-b bg-sky-50 px-4 py-3">
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                Commande {order.number}
+                Commande
               </p>
-              <p className="text-lg font-bold text-navy-900">
-                {STATUS_LABEL[order.status] ?? order.status}
+              <p className="font-mono font-bold text-navy-900">
+                {order.number}
               </p>
             </div>
-            <Package className="h-6 w-6 text-sky-600" />
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                order.status === "cancelled"
+                  ? "bg-destructive/10 text-destructive"
+                  : order.status === "delivered"
+                    ? "bg-stock-in/10 text-stock-in"
+                    : "bg-cta-500/10 text-cta-600"
+              }`}
+            >
+              {STATUS_LABEL[order.status] ?? order.status}
+            </span>
           </div>
 
-          <div className="grid gap-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">Client :</span>{" "}
-              {order.customerName}
+          {/* Stepper de progression */}
+          {order.status !== "cancelled" && (
+            <div className="flex items-center px-4 py-5">
+              {STEPS.map((step, i) => {
+                const currentIdx = STEPS.findIndex(
+                  (s) => s.key === order.status
+                );
+                const done = i <= (currentIdx < 0 ? 0 : currentIdx);
+                return (
+                  <div
+                    key={step.key}
+                    className="flex flex-1 items-center last:flex-none"
+                  >
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-full border-2 ${
+                          done
+                            ? "border-sky-600 bg-sky-600 text-white"
+                            : "border-muted bg-background text-muted-foreground"
+                        }`}
+                      >
+                        {done ? (
+                          <Check className="h-4 w-4" />
+                        ) : (
+                          <span className="text-xs">{i + 1}</span>
+                        )}
+                      </div>
+                      <span
+                        className={`mt-1 text-[11px] ${
+                          done
+                            ? "font-medium text-navy-900"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <div
+                        className={`mx-2 mb-4 h-0.5 flex-1 ${
+                          i < (currentIdx < 0 ? 0 : currentIdx)
+                            ? "bg-sky-600"
+                            : "bg-muted"
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {order.status === "cancelled" && (
+            <div className="flex items-center gap-2 px-4 py-3 text-sm text-destructive">
+              <XCircle className="h-4 w-4" /> Cette commande a été annulée.
+            </div>
+          )}
+
+          {/* Articles */}
+          <div className="border-t px-4 py-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <Truck className="h-3.5 w-3.5" /> Contenu de la commande
             </p>
-            <p>
-              <span className="text-muted-foreground">Téléphone :</span>{" "}
+            <ul className="divide-y text-sm">
+              {order.items.map((item, i) => (
+                <li key={i} className="flex justify-between py-2">
+                  <span>
+                    {item.name}
+                    <span className="text-muted-foreground">
+                      {" "}
+                      × {item.quantity}
+                    </span>
+                  </span>
+                  <span className="font-medium">
+                    {formatPrice(item.price * item.quantity)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Récapitulatif */}
+          <div className="space-y-1.5 border-t bg-sky-50/50 px-4 py-3 text-sm">
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <Package className="h-3.5 w-3.5" /> {order.customerName} ·{" "}
               {order.phone}
             </p>
-            <p>
-              <span className="text-muted-foreground">Livraison :</span>{" "}
-              {order.district}, {order.city}
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5" /> {order.district}, {order.city}
+              {order.landmark ? ` (${order.landmark})` : ""}
             </p>
-            <p>
-              <span className="text-muted-foreground">Total :</span>{" "}
-              {formatPrice(order.total)}
+            <p className="flex items-center gap-2 text-muted-foreground">
+              <CreditCard className="h-3.5 w-3.5" />{" "}
+              {PAYMENT_LABEL[order.paymentMethod] ?? order.paymentMethod}
             </p>
-            <p>
-              <span className="text-muted-foreground">Paiement :</span>{" "}
-              {order.paymentMethod === "cash_on_delivery"
-                ? "Paiement à la livraison"
-                : order.paymentMethod}
-            </p>
+            <div className="flex justify-between border-t pt-2 text-base font-bold text-navy-900">
+              <span>Total</span>
+              <span>{formatPrice(order.total)}</span>
+            </div>
           </div>
 
-          <a
-            href={`https://wa.me/${CONTACT.whatsapp}?text=Bonjour,+je+souhaite+des+infos+sur+ma+commande+${order.number}`}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-md bg-whatsapp-500 px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            <MessageCircle className="h-4 w-4" /> Contacter le support
-          </a>
+          {/* Support */}
+          <div className="border-t p-4">
+            <a
+              href={`https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(`Bonjour, je souhaite des infos sur ma commande ${order.number}.`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-whatsapp-500 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"
+            >
+              <MessageCircle className="h-4 w-4" /> Contacter le support
+            </a>
+          </div>
         </div>
       )}
     </div>

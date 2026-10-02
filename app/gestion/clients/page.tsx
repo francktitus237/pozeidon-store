@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
