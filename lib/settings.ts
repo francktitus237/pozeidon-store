@@ -10,7 +10,7 @@ export interface Announcement {
 }
 
 const DEFAULT_ANNOUNCEMENT: Announcement = {
-  text: "Kits & accessoires Starlink · Accessoires informatique · Livraison Douala & Yaoundé · Installation certifiée",
+  text: "Internet par satellite Starlink · Installation certifiée · Accessoires informatique · Livraison express Douala & Yaoundé",
   enabled: true,
   bg: "navy",
 };
