@@ -9,7 +9,7 @@ export default function AdminLayout({
 }) {
   return (
     <StoreProvider>
-      <div className="flex min-h-screen bg-sky-50/40">
+      <div className="flex h-screen overflow-hidden bg-sky-50/40">
         <AdminSidebar />
         <section className="min-w-0 flex-1 overflow-y-auto p-6">
           <Toaster>{children}</Toaster>
