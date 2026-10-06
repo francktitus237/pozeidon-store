@@ -23,7 +23,7 @@ const ITEMS = [
   { href: "/gestion/commandes", icon: ShoppingBag, label: "Commandes" },
   { href: "/gestion/installations", icon: Wrench, label: "Installations" },
   { href: "/gestion/clients", icon: Users, label: "Clients" },
-  { href: "/gestion/bannieres", icon: ImageIcon, label: "Bannières" },
+  { href: "/gestion/contenu", icon: ImageIcon, label: "Contenu du site" },
   { href: "/gestion/statistiques", icon: BarChart3, label: "Statistiques" },
   { href: "/gestion/reglages", icon: Settings, label: "Réglages" },
 ];

@@ -1,14 +1,13 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { getConseils } from "@/lib/settings";
 
-const POSTS = [
-  "Combien coûte vraiment Starlink au Cameroun ?",
-  "Starlink ou fibre optique : que choisir ?",
-  "Bien orienter son antenne : le guide",
-];
+export async function BlogPreview() {
+  const posts = await getConseils();
+  if (posts.length === 0) return null;
 
-export function BlogPreview() {
   return (
     <section>
       <div className="mb-4 flex items-center justify-between">
@@ -21,13 +20,23 @@ export function BlogPreview() {
         </Link>
       </div>
       <div className="grid gap-3 md:grid-cols-3">
-        {POSTS.map((title) => (
-          <Card key={title} className="overflow-hidden">
-            <div className="flex aspect-video items-center justify-center bg-sky-50 text-sm text-sky-600">
-              image
+        {posts.map((post) => (
+          <Card key={post.title} className="overflow-hidden">
+            <div className="relative flex aspect-video items-center justify-center bg-sky-50 text-sm text-sky-600">
+              {post.image ? (
+                <Image
+                  src={post.image}
+                  alt={post.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover"
+                />
+              ) : (
+                "image"
+              )}
             </div>
             <CardContent className="p-4">
-              <p className="text-sm font-medium leading-snug">{title}</p>
+              <p className="text-sm font-medium leading-snug">{post.title}</p>
             </CardContent>
           </Card>
         ))}

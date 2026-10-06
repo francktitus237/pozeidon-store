@@ -10,7 +10,7 @@ export interface Announcement {
 }
 
 const DEFAULT_ANNOUNCEMENT: Announcement = {
-  text: "Accessoires Starlink · Accessoires informatique · Installation certifiée · Livraison express Douala & Yaoundé",
+  text: "Ordinateurs neufs & occasion · Accessoires Starlink & informatique · Installation & maintenance · Livraison express Douala & Yaoundé",
   enabled: true,
   bg: "navy",
 };
@@ -64,4 +64,82 @@ export async function getCookieBanner(): Promise<CookieBanner> {
   } catch {
     return DEFAULT_COOKIE_BANNER;
   }
+}
+
+// ── Contenu du site administrable (listes JSON dans la table settings) ──
+
+export interface Realisation {
+  city: string;
+  label: string;
+  image?: string;
+}
+
+const DEFAULT_REALISATIONS: Realisation[] = [
+  { city: "Douala", label: "villa" },
+  { city: "Kribi", label: "hôtel" },
+  { city: "Bertoua", label: "ONG" },
+  { city: "Yaoundé", label: "bureau" },
+];
+
+export interface Testimonial {
+  name: string;
+  rating: number;
+  text: string;
+}
+
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
+  {
+    name: "Marc T., Douala",
+    rating: 5,
+    text: "Installation faite en 3 heures, débit excellent. Équipe sérieuse.",
+  },
+  {
+    name: "Aïcha N., Yaoundé",
+    rating: 5,
+    text: "Commande passée le lundi, matériel livré le mardi.",
+  },
+  {
+    name: "ONG Sahel",
+    rating: 4,
+    text: "Bon conseil sur le choix du kit pour notre site isolé.",
+  },
+];
+
+export interface Conseil {
+  title: string;
+  image?: string;
+}
+
+const DEFAULT_CONSEILS: Conseil[] = [
+  { title: "Comment choisir un ordinateur d'occasion fiable ?" },
+  { title: "Starlink ou fibre optique : que choisir au Cameroun ?" },
+  { title: "Bien protéger son réseau WiFi à la maison" },
+];
+
+async function getJsonList<T>(
+  key: string,
+  defaults: T[]
+): Promise<T[]> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, key),
+    });
+    if (!row) return defaults;
+    const parsed = JSON.parse(row.value);
+    return Array.isArray(parsed) ? (parsed as T[]) : defaults;
+  } catch {
+    return defaults;
+  }
+}
+
+export function getRealisations(): Promise<Realisation[]> {
+  return getJsonList("realisations", DEFAULT_REALISATIONS);
+}
+
+export function getTestimonials(): Promise<Testimonial[]> {
+  return getJsonList("testimonials", DEFAULT_TESTIMONIALS);
+}
+
+export function getConseils(): Promise<Conseil[]> {
+  return getJsonList("conseils", DEFAULT_CONSEILS);
 }

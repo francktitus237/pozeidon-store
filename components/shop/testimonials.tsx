@@ -1,32 +1,18 @@
 import { Star } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { getTestimonials } from "@/lib/settings";
 
-const REVIEWS = [
-  {
-    name: "Marc T., Douala",
-    rating: 5,
-    text: "Installation faite en 3 heures, débit excellent. Équipe sérieuse.",
-  },
-  {
-    name: "Aïcha N., Yaoundé",
-    rating: 5,
-    text: "Commande passée le lundi, matériel livré le mardi.",
-  },
-  {
-    name: "ONG Sahel",
-    rating: 4,
-    text: "Bon conseil sur le choix du kit pour notre site isolé.",
-  },
-];
+export async function Testimonials() {
+  const reviews = await getTestimonials();
+  if (reviews.length === 0) return null;
 
-export function Testimonials() {
   return (
     <section>
       <h2 className="mb-4 text-xl font-bold text-navy-900">
         Ce que disent nos clients
       </h2>
       <div className="grid gap-3 md:grid-cols-3">
-        {REVIEWS.map((r) => (
+        {reviews.map((r) => (
           <Card key={r.name}>
             <CardContent className="p-4">
               <div className="mb-2 flex gap-0.5">
