@@ -78,47 +78,53 @@ export async function register() {
       )`;
     console.log("[db] Schéma Postgres vérifié/créé.");
 
-    // ── Seed initial si la base est vide (premier déploiement) ──
-    const [{ count: catCount }] = await sql<
-      { count: string }[]
-    >`SELECT COUNT(*)::text AS count FROM categories`;
+    // ── Synchronisation du catalogue initial ──
+    // Ids des anciens produits démo (remplacés par le nouveau catalogue)
+    const LEGACY_IDS = Array.from({ length: 14 }, (_, i) => `p${i + 1}`);
 
-    if (Number(catCount) === 0) {
-      const { CATEGORIES } = await import("./lib/constants");
-      for (const c of CATEGORIES) {
-        await sql`
-          INSERT INTO categories (id, slug, name)
-          VALUES (${c.slug}, ${c.slug}, ${c.name})
-          ON CONFLICT (slug) DO NOTHING`;
-      }
-      console.log(`[db] ${CATEGORIES.length} catégories insérées.`);
+    const { CATEGORIES } = await import("./lib/constants");
+    const { DEMO_PRODUCTS } = await import("./features/products/data");
+
+    // Upsert des catégories
+    for (const c of CATEGORIES) {
+      await sql`
+        INSERT INTO categories (id, slug, name)
+        VALUES (${c.slug}, ${c.slug}, ${c.name})
+        ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name`;
     }
 
-    const [{ count: prodCount }] = await sql<
-      { count: string }[]
-    >`SELECT COUNT(*)::text AS count FROM products`;
+    // Supprime les anciens produits démo (les vrais articles admin sont conservés)
+    await sql`
+      DELETE FROM products WHERE id = ANY(${LEGACY_IDS})`;
 
-    if (Number(prodCount) === 0) {
-      const { DEMO_PRODUCTS } = await import(
-        "./features/products/data"
-      );
-      for (const p of DEMO_PRODUCTS) {
-        await sql`
-          INSERT INTO products (
-            id, slug, name, reference, description, price, promo_price,
-            stock, status, category_id, images, video_url,
-            installation_available
-          ) VALUES (
-            ${p.id}, ${p.slug}, ${p.name}, ${p.reference},
-            ${p.description ?? null}, ${p.price}, ${p.promoPrice ?? null},
-            ${p.stock}, ${p.status}, ${p.categoryId},
-            ${sql.json(p.images)}, ${p.videoUrl ?? null},
-            ${p.installationAvailable}
-          )
-          ON CONFLICT (id) DO NOTHING`;
-      }
-      console.log(`[db] ${DEMO_PRODUCTS.length} produits démo insérés.`);
+    // Supprime les catégories obsolètes non référencées
+    const keepSlugs = CATEGORIES.map((c) => c.slug);
+    await sql`
+      DELETE FROM categories c
+      WHERE NOT (c.slug = ANY(${keepSlugs}))
+        AND NOT EXISTS (
+          SELECT 1 FROM products p WHERE p.category_id = c.id
+        )`;
+
+    // Insère le nouveau catalogue (idempotent)
+    for (const p of DEMO_PRODUCTS) {
+      await sql`
+        INSERT INTO products (
+          id, slug, name, reference, description, price, promo_price,
+          stock, status, category_id, images, video_url,
+          installation_available
+        ) VALUES (
+          ${p.id}, ${p.slug}, ${p.name}, ${p.reference},
+          ${p.description ?? null}, ${p.price}, ${p.promoPrice ?? null},
+          ${p.stock}, ${p.status}, ${p.categoryId},
+          ${sql.json(p.images)}, ${p.videoUrl ?? null},
+          ${p.installationAvailable}
+        )
+        ON CONFLICT (id) DO NOTHING`;
     }
+    console.log(
+      `[db] Catalogue synchronisé : ${CATEGORIES.length} catégories, ${DEMO_PRODUCTS.length} produits.`
+    );
   } catch (e) {
     console.error("[db] Échec init Postgres :", e);
   } finally {

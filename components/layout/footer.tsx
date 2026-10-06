@@ -10,8 +10,8 @@ export function Footer() {
         <div>
           <p className="mb-3 text-lg font-bold text-white">{SITE_NAME}</p>
           <p className="text-sm leading-relaxed">
-            Votre partenaire pour l&apos;internet par satellite et
-            l&apos;informatique au Cameroun. Vente, livraison et installation.
+            Vente d&apos;équipement informatique et d&apos;accessoires Starlink
+            au Cameroun. Maintenance, installation et livraison.
           </p>
           <div className="mt-4 space-y-2 text-sm">
             <a
@@ -28,8 +28,8 @@ export function Footer() {
               Lun – Sam : 8h – 18h
             </p>
             <p className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 text-sky-400" />
-              Douala &amp; Yaoundé, Cameroun
+              <MapPin className="h-4 w-4 shrink-0 text-sky-400" />
+              {CONTACT.address}
             </p>
           </div>
         </div>
@@ -97,8 +97,8 @@ export function Footer() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-2 px-4 text-xs sm:flex-row">
           <p>© {new Date().getFullYear()} {SITE_NAME}. Tous droits réservés.</p>
           <p className="text-sky-200/70">
-            Installation satellite certifiée · Accessoires Starlink &amp;
-            informatique
+            Ordinateurs · Accessoires Starlink &amp; informatique ·
+            Maintenance
           </p>
         </div>
       </div>

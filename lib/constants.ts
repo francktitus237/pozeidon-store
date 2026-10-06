@@ -3,13 +3,10 @@
 export const SITE_NAME = "Pozeidon Engineering";
 
 export const CATEGORIES = [
-  { slug: "cables-connectique", name: "Câbles & connectique" },
-  { slug: "supports-fixations", name: "Supports & fixations" },
-  { slug: "energie-onduleurs", name: "Énergie & onduleurs" },
-  { slug: "protection-etancheite", name: "Protection & étanchéité" },
-  { slug: "antennes-routeurs", name: "Antennes & routeurs" },
+  { slug: "ordinateurs", name: "Ordinateurs neufs & occasion" },
   { slug: "accessoires-starlink", name: "Accessoires Starlink" },
   { slug: "accessoires-informatique", name: "Accessoires informatique" },
+  { slug: "services", name: "Services & maintenance" },
   { slug: "promotions", name: "Promotions" },
 ] as const;
 
@@ -33,10 +30,16 @@ export const PAYMENT_METHODS = [
 ] as const;
 
 export const CONTACT = {
-  whatsapp: "2376XXXXXXXX",
-  phone: "6XX XX XX XX",
+  whatsapp: "237696179594",
+  phone: "6 96 17 95 94",
+  address: "Akwa, Rue Equinoxe — en face Boissons du Cameroun, Carrefour Central, Douala",
 };
 
 export function formatPrice(amount: number): string {
   return `${amount.toLocaleString("fr-FR").replace(/\u202f/g, " ")} FCFA`;
+}
+
+/** Affiche le prix ou "Prix sur demande" si le montant n'est pas fixé (0). */
+export function priceLabel(amount: number): string {
+  return amount > 0 ? formatPrice(amount) : "Prix sur demande";
 }

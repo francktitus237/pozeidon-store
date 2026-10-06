@@ -14,25 +14,32 @@ import { Button } from "@/components/ui/button";
 
 const SLIDES = [
   {
-    title: "Accessoires Starlink livrés partout au Cameroun",
-    subtitle: "Câbles, supports, onduleurs — stock réel, prix affichés",
-    cta: "Voir la boutique",
-    href: "/boutique/cables-connectique",
+    title: "Ordinateurs neufs & occasion",
+    subtitle: "Unités centrales, desktop complets — contrôle qualité garanti",
+    cta: "Voir les ordinateurs",
+    href: "/boutique/ordinateurs",
     image: "/images/kit-starlink.jpg",
   },
   {
-    title: "Installation par technicien certifié",
-    subtitle: "Devis gratuit · Réponse sous 24 h",
-    cta: "Demander une installation",
-    href: "/installation",
+    title: "Maintenance & installation",
+    subtitle: "Logiciels, systèmes et caméras de surveillance — devis gratuit",
+    cta: "Demander un devis",
+    href: "/services",
     image: "/images/antenne-starlink.jpg",
   },
   {
-    title: "Vente flash en cours",
-    subtitle: "Jusqu'à -30 % sur les accessoires",
-    cta: "Profiter de l'offre",
-    href: "/boutique/promotions",
+    title: "Accessoires Starlink",
+    subtitle: "Chargeurs, câbles, supports et routeurs V4 & Mini",
+    cta: "Voir les accessoires",
+    href: "/boutique/accessoires-starlink",
     image: "/images/cable.jpg",
+  },
+  {
+    title: "Accessoires informatiques",
+    subtitle: "Répéteurs WiFi, écrans, batteries, claviers, chargeurs",
+    cta: "Voir le catalogue",
+    href: "/boutique/accessoires-informatique",
+    image: "/images/connecteur.jpg",
   },
 ];
 

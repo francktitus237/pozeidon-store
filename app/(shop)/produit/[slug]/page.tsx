@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
 import { ProductCard } from "@/components/shop/product-card";
 import { getProductBySlug, getProducts } from "@/features/products/queries";
-import { formatPrice } from "@/lib/constants";
+import { formatPrice, priceLabel } from "@/lib/constants";
 import type { Metadata } from "next";
 
 interface ProductPageProps {
@@ -32,7 +32,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const hasPromo = product.promoPrice !== undefined;
+  const hasPromo =
+    product.promoPrice !== undefined && product.price > 0;
   const discount = hasPromo
     ? Math.round((1 - product.promoPrice! / product.price) * 100)
     : 0;
@@ -86,7 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-navy-900">
-              {formatPrice(product.promoPrice ?? product.price)}
+              {priceLabel(product.promoPrice ?? product.price)}
             </span>
             {hasPromo && (
               <span className="text-lg text-muted-foreground line-through">

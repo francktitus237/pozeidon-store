@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatPrice } from "@/lib/constants";
+import { priceLabel } from "@/lib/constants";
 import type { Product } from "@/types";
 
 const STOCK_LABEL = {
@@ -12,7 +12,8 @@ const STOCK_LABEL = {
 } as const;
 
 export function ProductCard({ product }: { product: Product }) {
-  const hasPromo = product.promoPrice !== undefined;
+  const hasPromo =
+    product.promoPrice !== undefined && product.price > 0;
   const discount = hasPromo
     ? Math.round((1 - product.promoPrice! / product.price) * 100)
     : 0;
@@ -46,12 +47,12 @@ export function ProductCard({ product }: { product: Product }) {
             {product.name}
           </p>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-base font-bold text-navy-900">
-              {formatPrice(product.promoPrice ?? product.price)}
+            <span className="font-bold text-navy-900">
+              {priceLabel(product.promoPrice ?? product.price)}
             </span>
-            {hasPromo && (
+            {product.promoPrice && (
               <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.price)}
+                {priceLabel(product.price)}
               </span>
             )}
           </div>

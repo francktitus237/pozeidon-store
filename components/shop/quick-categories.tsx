@@ -1,24 +1,29 @@
 import Link from "next/link";
 import {
-  Cable,
+  Monitor,
   Antenna,
-  Plug,
-  BatteryCharging,
-  ShieldCheck,
+  Keyboard,
   Wrench,
-  Package,
   Tag,
+  LayoutGrid,
 } from "lucide-react";
 
 const SHORTCUTS = [
-  { slug: "kits-starlink", label: "Kits", icon: Package },
-  { slug: "antennes-routeurs", label: "Antennes", icon: Antenna },
-  { slug: "cables-connectique", label: "Câbles", icon: Cable },
-  { slug: "supports-fixations", label: "Supports", icon: Wrench },
-  { slug: "energie-onduleurs", label: "Énergie", icon: BatteryCharging },
-  { slug: "protection-etancheite", label: "Protection", icon: ShieldCheck },
+  { slug: "ordinateurs", label: "Ordinateurs", icon: Monitor },
+  { slug: "accessoires-starlink", label: "Starlink", icon: Antenna },
+  {
+    slug: "accessoires-informatique",
+    label: "Accessoires",
+    icon: Keyboard,
+  },
+  { slug: "services", label: "Services", icon: Wrench, href: "/services" },
   { slug: "promotions", label: "Promos", icon: Tag },
-  { slug: "boutique", label: "Tout", icon: Plug, href: "/boutique/cables-connectique" },
+  {
+    slug: "boutique",
+    label: "Tout",
+    icon: LayoutGrid,
+    href: "/boutique",
+  },
 ];
 
 export function QuickCategories() {

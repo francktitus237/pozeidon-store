@@ -24,9 +24,9 @@ const INFO_CARDS = [
   },
   {
     icon: MapPin,
-    title: "Zones couvertes",
-    value: "Douala · Yaoundé · Kribi",
-    hint: "Livraison et installation partout au Cameroun",
+    title: "Adresse",
+    value: "Akwa, Rue Equinoxe — Douala",
+    hint: "En face Boissons du Cameroun, Carrefour Central",
     accent: "text-sky-600",
   },
   {

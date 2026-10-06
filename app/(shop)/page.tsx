@@ -34,9 +34,11 @@ export default async function Home() {
         <TrustBand />
       </div>
 
-      <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
-        <FlashSale products={flashProducts} endsAt={FLASH_SALE_END} />
-      </div>
+      {flashProducts.length > 0 && (
+        <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
+          <FlashSale products={flashProducts} endsAt={FLASH_SALE_END} />
+        </div>
+      )}
 
       {/* Grille articles */}
       <section
@@ -45,7 +47,7 @@ export default async function Home() {
       >
         <SectionHeading
           title="Accessoires Starlink"
-          href="/boutique/cables-connectique"
+          href="/boutique/accessoires-starlink"
         />
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {products.map((p) => (

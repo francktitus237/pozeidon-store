@@ -2,9 +2,10 @@ import Link from "next/link";
 import {
   Truck,
   Wrench,
-  Building2,
+  MonitorCog,
+  Cctv,
+  Antenna,
   MessageCircle,
-  ShieldCheck,
   ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -15,36 +16,44 @@ export const metadata = {
 
 const SERVICES = [
   {
-    icon: Truck,
-    title: "Livraison express",
+    icon: MonitorCog,
+    title: "Maintenance informatique",
     description:
-      "Expédition de vos accessoires Starlink à Douala, Yaoundé, Kribi et dans tout le Cameroun. Suivi de commande disponible.",
-    cta: "Voir la boutique",
-    href: "/boutique",
+      "Diagnostic, dépannage et entretien de vos ordinateurs : matériel, performance, virus, récupération de données.",
+    cta: "Demander une intervention",
+    href: "/contact",
   },
   {
     icon: Wrench,
-    title: "Installation certifiée",
+    title: "Installation systèmes & logiciels",
     description:
-      "Nos techniciens installent votre kit Starlink à domicile ou au bureau : antenne, câblage, configuration du routeur, tests de débit.",
+      "Installation de Windows, suites bureautiques, antivirus et logiciels métiers sur vos machines neuves ou existantes.",
+    cta: "Demander un devis",
+    href: "/contact",
+  },
+  {
+    icon: Cctv,
+    title: "Caméras de surveillance",
+    description:
+      "Étude, pose et configuration de systèmes de vidéosurveillance pour domiciles, commerces et entreprises.",
+    cta: "Demander un devis",
+    href: "/contact",
+  },
+  {
+    icon: Antenna,
+    title: "Installation Starlink",
+    description:
+      "Nos techniciens installent votre kit Starlink : antenne, câblage, configuration du routeur, tests de débit.",
     cta: "Demander une installation",
     href: "/installation",
   },
   {
-    icon: Building2,
-    title: "Solutions entreprises",
+    icon: Truck,
+    title: "Livraison express",
     description:
-      "Connexion internet par satellite pour bureaux, restaurants, hôtels et chantiers. Devis sur mesure et maintenance.",
-    cta: "Nous contacter",
-    href: "/contact",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Assistance & SAV",
-    description:
-      "Support technique et suivi après-vente par WhatsApp ou téléphone. Remplacement de pièces et dépannage.",
-    cta: "Ouvrir un ticket",
-    href: "/contact",
+      "Livraison de vos commandes à Douala, Yaoundé, Kribi et dans tout le Cameroun. Suivi de commande disponible.",
+    cta: "Voir la boutique",
+    href: "/boutique",
   },
 ];
 
@@ -54,7 +63,7 @@ export default function ServicesPage() {
       <div className="bg-navy-900 px-4 py-12 text-center text-white">
         <h1 className="text-3xl font-bold">Nos services</h1>
         <p className="mx-auto mt-2 max-w-2xl text-sm text-sky-100">
-          Accessoires Starlink, installation professionnelle et accompagnement
+          Informatique, accessoires Starlink, installations et accompagnement
           complet au Cameroun.
         </p>
       </div>
