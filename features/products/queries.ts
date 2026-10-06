@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { Product } from "@/types";
-import { DEMO_PRODUCTS } from "./data";
+import { DEMO_PRODUCTS, FLASH_PRODUCTS } from "./data";
 
 function toProduct(row: typeof products.$inferSelect): Product {
   return {
@@ -37,7 +37,12 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getFlashProducts(): Promise<Product[]> {
   const all = await getProducts();
-  return all.filter((p) => p.promoPrice != null);
+  const promos = all.filter((p) => p.promoPrice != null);
+  if (promos.length > 0) return promos.slice(0, 4);
+  // Pas de promo active : on met en avant la sélection par défaut
+  const ids = new Set(FLASH_PRODUCTS.map((p) => p.id));
+  const selection = all.filter((p) => ids.has(p.id));
+  return selection.length > 0 ? selection : all.slice(0, 4);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
