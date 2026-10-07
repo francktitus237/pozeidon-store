@@ -1,5 +1,6 @@
-import { ComingSoon } from "@/components/coming-soon";
+import { redirect } from "next/navigation";
 
+// Ancienne entrée du menu — le contenu du site se gère dans /gestion/contenu
 export default function AdminBannersPage() {
-  return <ComingSoon title="Bannières & contenu du site" />;
+  redirect("/gestion/contenu");
 }
