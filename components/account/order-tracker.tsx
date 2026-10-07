@@ -39,7 +39,11 @@ const STEPS = [
   { key: "delivered", label: "Livrée" },
 ];
 
-export function OrderTracker() {
+export function OrderTracker({
+  whatsapp = CONTACT.whatsapp,
+}: {
+  whatsapp?: string;
+}) {
   const [number, setNumber] = useState("");
   const [phone, setPhone] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
@@ -235,7 +239,7 @@ export function OrderTracker() {
           {/* Support */}
           <div className="border-t p-4">
             <a
-              href={`https://wa.me/${CONTACT.whatsapp}?text=${encodeURIComponent(`Bonjour, je souhaite des infos sur ma commande ${order.number}.`)}`}
+              href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Bonjour, je souhaite des infos sur ma commande ${order.number}.`)}`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-whatsapp-500 px-4 py-2.5 text-sm font-medium text-white hover:opacity-90"

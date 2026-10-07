@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { CONTACT } from "@/lib/constants";
 
 export interface Announcement {
   text: string;
@@ -142,4 +143,33 @@ export function getTestimonials(): Promise<Testimonial[]> {
 
 export function getConseils(): Promise<Conseil[]> {
   return getJsonList("conseils", DEFAULT_CONSEILS);
+}
+
+// ── Coordonnées générales du site (éditables dans Réglages) ──
+
+export interface ContactInfo {
+  whatsapp: string;
+  phone: string;
+  address: string;
+  hours: string;
+}
+
+const DEFAULT_CONTACT: ContactInfo = {
+  whatsapp: CONTACT.whatsapp,
+  phone: CONTACT.phone,
+  address: CONTACT.address,
+  hours: "Lun – Sam : 8h – 18h",
+};
+
+export async function getContact(): Promise<ContactInfo> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, "contact"),
+    });
+    if (!row) return DEFAULT_CONTACT;
+    const parsed = JSON.parse(row.value) as Partial<ContactInfo>;
+    return { ...DEFAULT_CONTACT, ...parsed };
+  } catch {
+    return DEFAULT_CONTACT;
+  }
 }

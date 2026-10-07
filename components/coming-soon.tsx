@@ -2,9 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CONTACT, SITE_NAME } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 
-export function ComingSoon({ title }: { title: string }) {
+export async function ComingSoon({ title }: { title: string }) {
+  const contact = await getContact();
   return (
     <main className="flex min-h-[70vh] flex-col items-center justify-center gap-6 px-4 py-16 text-center">
       <Image
@@ -36,7 +38,7 @@ export function ComingSoon({ title }: { title: string }) {
         <Button
           render={
             <a
-              href={`https://wa.me/${CONTACT.whatsapp}`}
+              href={`https://wa.me/${contact.whatsapp}`}
               target="_blank"
               rel="noreferrer"
             />

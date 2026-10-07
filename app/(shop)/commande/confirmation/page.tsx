@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { CheckCircle2, MessageCircle, Search } from "lucide-react";
-import { CONTACT } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Commande confirmée",
@@ -13,6 +13,7 @@ export default async function ConfirmationPage({
   searchParams: Promise<{ numero?: string }>;
 }) {
   const { numero } = await searchParams;
+  const contact = await getContact();
 
   const waMessage = encodeURIComponent(
     `Bonjour, je viens de passer la commande ${numero ?? ""} sur votre site.`
@@ -46,7 +47,7 @@ export default async function ConfirmationPage({
 
         <div className="mt-8 flex flex-col gap-3">
           <Link
-            href={`https://wa.me/${CONTACT.whatsapp}?text=${waMessage}`}
+            href={`https://wa.me/${contact.whatsapp}?text=${waMessage}`}
             target="_blank"
             className="flex items-center justify-center gap-2 rounded-lg bg-whatsapp-500 px-5 py-3 font-semibold text-white transition hover:opacity-90"
           >

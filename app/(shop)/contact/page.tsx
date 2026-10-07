@@ -1,44 +1,45 @@
 import { MapPin, Phone, MessageCircle, Clock, Headset } from "lucide-react";
 import { ContactForm } from "@/components/contact/contact-form";
-import { CONTACT } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 
 export const metadata = {
   title: "Contact — Pozeidon Engineering",
 };
 
-const INFO_CARDS = [
-  {
-    icon: MessageCircle,
-    title: "WhatsApp",
-    value: CONTACT.phone,
-    hint: "Réponse sous 1 h en journée",
-    href: `https://wa.me/${CONTACT.whatsapp}`,
-    accent: "text-whatsapp-500",
-  },
-  {
-    icon: Phone,
-    title: "Téléphone",
-    value: CONTACT.phone,
-    hint: "Appels direct pendant les horaires",
-    accent: "text-sky-600",
-  },
-  {
-    icon: MapPin,
-    title: "Adresse",
-    value: "Akwa, Rue Equinoxe — Douala",
-    hint: "En face Boissons du Cameroun, Carrefour Central",
-    accent: "text-sky-600",
-  },
-  {
-    icon: Clock,
-    title: "Horaires",
-    value: "Lun – Sam : 8 h – 19 h",
-    hint: "Dimanche : sur rendez-vous",
-    accent: "text-sky-600",
-  },
-];
+export default async function ContactPage() {
+  const contact = await getContact();
 
-export default function ContactPage() {
+  const INFO_CARDS = [
+    {
+      icon: MessageCircle,
+      title: "WhatsApp",
+      value: contact.phone,
+      hint: "Réponse sous 1 h en journée",
+      href: `https://wa.me/${contact.whatsapp}`,
+      accent: "text-whatsapp-500",
+    },
+    {
+      icon: Phone,
+      title: "Téléphone",
+      value: contact.phone,
+      hint: "Appels direct pendant les horaires",
+      accent: "text-sky-600",
+    },
+    {
+      icon: MapPin,
+      title: "Adresse",
+      value: contact.address,
+      hint: "En face Boissons du Cameroun, Carrefour Central",
+      accent: "text-sky-600",
+    },
+    {
+      icon: Clock,
+      title: "Horaires",
+      value: contact.hours,
+      hint: "Dimanche : sur rendez-vous",
+      accent: "text-sky-600",
+    },
+  ];
   return (
     <main>
       {/* Bandeau */}
@@ -86,7 +87,7 @@ export default function ContactPage() {
           <p className="mb-5 mt-1 text-sm text-muted-foreground">
             Décrivez votre besoin — le message part directement sur notre
             WhatsApp.
-          </p>
+          </p>whatsapp={contact.whatsapp} 
           <ContactForm />
         </div>
       </div>

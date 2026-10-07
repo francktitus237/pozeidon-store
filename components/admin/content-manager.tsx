@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { Plus, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ImageField } from "@/components/admin/image-field";
 import {
   updateRealisations,
   updateTestimonials,
@@ -85,43 +86,48 @@ export function ContentManager({
         }
       >
         {realisations.map((r, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              className={inputCls}
-              placeholder="Ville (ex : Douala)"
-              value={r.city}
-              onChange={(e) =>
-                setRealisations((l) =>
-                  l.map((x, j) => (j === i ? { ...x, city: e.target.value } : x))
-                )
-              }
-            />
-            <input
-              className={inputCls}
-              placeholder="Type (ex : villa, hôtel)"
-              value={r.label}
-              onChange={(e) =>
-                setRealisations((l) =>
-                  l.map((x, j) =>
-                    j === i ? { ...x, label: e.target.value } : x
+          <div
+            key={i}
+            className="flex flex-col gap-2 rounded-md border p-3"
+          >
+            <div className="flex gap-2">
+              <input
+                className={inputCls}
+                placeholder="Ville (ex : Douala)"
+                value={r.city}
+                onChange={(e) =>
+                  setRealisations((l) =>
+                    l.map((x, j) =>
+                      j === i ? { ...x, city: e.target.value } : x
+                    )
                   )
-                )
-              }
-            />
-            <input
-              className={inputCls}
-              placeholder="URL image (optionnel)"
+                }
+              />
+              <input
+                className={inputCls}
+                placeholder="Type (ex : villa, hôtel)"
+                value={r.label}
+                onChange={(e) =>
+                  setRealisations((l) =>
+                    l.map((x, j) =>
+                      j === i ? { ...x, label: e.target.value } : x
+                    )
+                  )
+                }
+              />
+              <RemoveBtn
+                onClick={() =>
+                  setRealisations((l) => l.filter((_, j) => j !== i))
+                }
+              />
+            </div>
+            <ImageField
               value={r.image ?? ""}
-              onChange={(e) =>
+              onChange={(url) =>
                 setRealisations((l) =>
-                  l.map((x, j) =>
-                    j === i ? { ...x, image: e.target.value } : x
-                  )
+                  l.map((x, j) => (j === i ? { ...x, image: url } : x))
                 )
               }
-            />
-            <RemoveBtn
-              onClick={() => setRealisations((l) => l.filter((_, j) => j !== i))}
             />
           </div>
         ))}
@@ -211,33 +217,34 @@ export function ContentManager({
         onAdd={() => setConseils((l) => [...l, { title: "", image: "" }])}
       >
         {conseils.map((c, i) => (
-          <div key={i} className="flex gap-2">
-            <input
-              className={inputCls}
-              placeholder="Titre de l'article"
-              value={c.title}
-              onChange={(e) =>
-                setConseils((l) =>
-                  l.map((x, j) =>
-                    j === i ? { ...x, title: e.target.value } : x
+          <div
+            key={i}
+            className="flex flex-col gap-2 rounded-md border p-3"
+          >
+            <div className="flex gap-2">
+              <input
+                className={inputCls}
+                placeholder="Titre de l'article"
+                value={c.title}
+                onChange={(e) =>
+                  setConseils((l) =>
+                    l.map((x, j) =>
+                      j === i ? { ...x, title: e.target.value } : x
+                    )
                   )
-                )
-              }
-            />
-            <input
-              className={inputCls}
-              placeholder="URL image (optionnel)"
+                }
+              />
+              <RemoveBtn
+                onClick={() => setConseils((l) => l.filter((_, j) => j !== i))}
+              />
+            </div>
+            <ImageField
               value={c.image ?? ""}
-              onChange={(e) =>
+              onChange={(url) =>
                 setConseils((l) =>
-                  l.map((x, j) =>
-                    j === i ? { ...x, image: e.target.value } : x
-                  )
+                  l.map((x, j) => (j === i ? { ...x, image: url } : x))
                 )
               }
-            />
-            <RemoveBtn
-              onClick={() => setConseils((l) => l.filter((_, j) => j !== i))}
             />
           </div>
         ))}

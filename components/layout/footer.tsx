@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { MapPin, MessageCircle, Phone, Clock } from "lucide-react";
-import { CATEGORIES, CONTACT, PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
+import { CATEGORIES, PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 
-export function Footer() {
+export async function Footer() {
+  const contact = await getContact();
   return (
     <footer className="mt-16 bg-navy-900 text-sky-100">
       <div className="container mx-auto grid gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
@@ -15,21 +17,21 @@ export function Footer() {
           </p>
           <div className="mt-4 space-y-2 text-sm">
             <a
-              href={`https://wa.me/${CONTACT.whatsapp}`}
+              href={`https://wa.me/${contact.whatsapp}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-2 hover:text-white"
             >
               <MessageCircle className="h-4 w-4 text-whatsapp-500" />
-              WhatsApp : {CONTACT.phone}
+              WhatsApp : {contact.phone}
             </a>
             <p className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-sky-400" />
-              Lun – Sam : 8h – 18h
+              {contact.hours}
             </p>
             <p className="flex items-center gap-2">
               <MapPin className="h-4 w-4 shrink-0 text-sky-400" />
-              {CONTACT.address}
+              {contact.address}
             </p>
           </div>
         </div>

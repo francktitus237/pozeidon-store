@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CONTACT } from "@/lib/constants";
 
-export function ContactForm() {
+export function ContactForm({ whatsapp = CONTACT.whatsapp }: { whatsapp?: string }) {
   const [sent, setSent] = useState(false);
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -15,7 +15,7 @@ export function ContactForm() {
       `Nom : ${data.get("name")}\nTéléphone : ${data.get("phone")}\n\n${data.get("message")}`
     );
     // En attendant le backend : ouvre WhatsApp avec le message pré-rempli
-    window.open(`https://wa.me/${CONTACT.whatsapp}?text=${message}`, "_blank");
+    window.open(`https://wa.me/${whatsapp}?text=${message}`, "_blank");
     setSent(true);
   }
 

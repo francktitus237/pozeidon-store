@@ -1,11 +1,13 @@
 import { User } from "lucide-react";
 import { OrderTracker } from "@/components/account/order-tracker";
+import { getContact } from "@/lib/settings";
 
 export const metadata = {
   title: "Mon compte — Pozeidon Engineering",
 };
 
-export default function AccountPage() {
+export default async function AccountPage() {
+  const contact = await getContact();
   return (
     <main>
       <div className="bg-navy-900 px-4 py-12 text-center text-white">
@@ -18,7 +20,7 @@ export default function AccountPage() {
 
       <div className="container mx-auto px-4 py-10">
         <div className="mx-auto max-w-xl">
-          <OrderTracker />
+          <OrderTracker whatsapp={contact.whatsapp} />
         </div>
       </div>
     </main>

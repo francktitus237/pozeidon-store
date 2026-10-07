@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
 import { ProductCard } from "@/components/shop/product-card";
 import { getProductBySlug, getProducts } from "@/features/products/queries";
+import { getContact } from "@/lib/settings";
 import { formatPrice, priceLabel } from "@/lib/constants";
 import type { Metadata } from "next";
 
@@ -29,7 +30,10 @@ const STOCK_LABEL = {
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const [product, contact] = await Promise.all([
+    getProductBySlug(slug),
+    getContact(),
+  ]);
   if (!product) notFound();
 
   const hasPromo =
@@ -112,7 +116,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </p>
           )}
 
-          <ProductActions product={product} />
+          <ProductActions product={product} whatsapp={contact.whatsapp} />
         </div>
       </div>
 

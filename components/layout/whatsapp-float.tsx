@@ -1,10 +1,11 @@
 import { MessageCircle } from "lucide-react";
-import { CONTACT } from "@/lib/constants";
+import { getContact } from "@/lib/settings";
 
-export function WhatsAppFloat() {
+export async function WhatsAppFloat() {
+  const contact = await getContact();
   return (
     <a
-      href={`https://wa.me/${CONTACT.whatsapp}`}
+      href={`https://wa.me/${contact.whatsapp}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Nous contacter sur WhatsApp"

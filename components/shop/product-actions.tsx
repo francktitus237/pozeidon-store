@@ -7,7 +7,13 @@ import { useCart } from "@/hooks/use-cart";
 import { formatPrice, CONTACT, INSTALLATION_PRICES } from "@/lib/constants";
 import type { Product } from "@/types";
 
-export function ProductActions({ product }: { product: Product }) {
+export function ProductActions({
+  product,
+  whatsapp = CONTACT.whatsapp,
+}: {
+  product: Product;
+  whatsapp?: string;
+}) {
   const { addItem, toggleCart } = useCart();
   const [qty, setQty] = useState(1);
   const [withInstall, setWithInstall] = useState(false);
@@ -118,7 +124,7 @@ export function ProductActions({ product }: { product: Product }) {
           </button>
         )}
         <Link
-          href={`https://wa.me/${CONTACT.whatsapp}?text=${waMessage}`}
+          href={`https://wa.me/${whatsapp}?text=${waMessage}`}
           target="_blank"
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-whatsapp-500 px-5 py-3 font-semibold text-white transition hover:opacity-90"
         >
