@@ -173,3 +173,39 @@ export async function getContact(): Promise<ContactInfo> {
     return DEFAULT_CONTACT;
   }
 }
+
+// ── Vidéo publicitaire de l'accueil (éditable dans Contenu du site) ──
+
+export interface PromoVideo {
+  url: string;
+  title: string;
+  enabled: boolean;
+}
+
+const DEFAULT_PROMO_VIDEO: PromoVideo = {
+  url: "",
+  title: "Découvrez nos services",
+  enabled: false,
+};
+
+export async function getPromoVideo(): Promise<PromoVideo> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, "promo_video"),
+    });
+    if (!row) return DEFAULT_PROMO_VIDEO;
+    const parsed = JSON.parse(row.value) as Partial<PromoVideo>;
+    return { ...DEFAULT_PROMO_VIDEO, ...parsed };
+  } catch {
+    return DEFAULT_PROMO_VIDEO;
+  }
+}
+
+/** Extrait l'ID YouTube d'une URL, null si ce n'est pas du YouTube */
+export function youtubeEmbedUrl(url: string): string | null {
+  const m =
+    url.match(/youtube\.com\/watch\?v=([\w-]{11})/) ??
+    url.match(/youtu\.be\/([\w-]{11})/) ??
+    url.match(/youtube\.com\/embed\/([\w-]{11})/);
+  return m ? `https://www.youtube.com/embed/${m[1]}` : null;
+}

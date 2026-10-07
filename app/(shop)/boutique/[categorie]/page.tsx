@@ -34,7 +34,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   if (!category) notFound();
 
   const all = await getProducts();
-  let items = all.filter((p) => p.categoryId === categorie);
+  // "promotions" n'est pas une vraie catégorie : elle regroupe les produits
+  // qui ont un prix promo, quelle que soit leur catégorie d'origine.
+  let items =
+    categorie === "promotions"
+      ? all.filter((p) => p.promoPrice != null && p.promoPrice > 0)
+      : all.filter((p) => p.categoryId === categorie);
 
   // Filtre disponibilité
   if (dispo === "stock") items = items.filter((p) => p.status === "in_stock" && p.stock > 0);
@@ -129,7 +134,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         <div className="mt-10 flex flex-col items-center gap-3 py-10 text-center">
           <SearchX className="h-12 w-12 text-muted-foreground/40" />
           <p className="text-sm text-muted-foreground">
-            Aucun article ne correspond à ces filtres.
+            {categorie === "promotions"
+              ? "Aucune promotion en cours — revenez bientôt !"
+              : "Aucun article ne correspond à ces filtres."}
           </p>
           <Link
             href={`/boutique/${categorie}`}

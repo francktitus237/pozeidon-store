@@ -32,6 +32,7 @@ export interface ProductFormData {
   status: string;
   categoryId: string;
   image: string;
+  videoUrl?: string;
   installationAvailable: boolean;
 }
 
@@ -52,6 +53,7 @@ export async function createProduct(data: ProductFormData) {
     status: data.status,
     categoryId: data.categoryId,
     images: [data.image].filter(Boolean),
+    videoUrl: data.videoUrl || null,
     installationAvailable: data.installationAvailable,
   });
 
@@ -74,6 +76,7 @@ export async function updateProduct(id: string, data: ProductFormData) {
       status: data.status,
       categoryId: data.categoryId,
       images: [data.image].filter(Boolean),
+      videoUrl: data.videoUrl || null,
       installationAvailable: data.installationAvailable,
     })
     .where(eq(products.id, id));

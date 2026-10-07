@@ -7,7 +7,12 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import type { Realisation, Testimonial, Conseil } from "@/lib/settings";
+import type {
+  Realisation,
+  Testimonial,
+  Conseil,
+  PromoVideo,
+} from "@/lib/settings";
 
 async function upsertSetting(key: string, value: unknown) {
   const session = await auth();
@@ -51,4 +56,9 @@ export async function updateConseils(items: Conseil[]) {
     "conseils",
     items.filter((c) => c.title.trim() || c.image)
   );
+}
+
+export async function updatePromoVideo(video: PromoVideo) {
+  await upsertSetting("promo_video", video);
+  revalidatePath("/");
 }

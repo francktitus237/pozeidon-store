@@ -22,6 +22,14 @@ export async function generateMetadata({
   return { title: product.name, description: product.description };
 }
 
+function youtubeId(url: string): string | null {
+  const m =
+    url.match(/youtube\.com\/watch\?v=([\w-]{11})/) ??
+    url.match(/youtu\.be\/([\w-]{11})/) ??
+    url.match(/youtube\.com\/embed\/([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
 const STOCK_LABEL = {
   in_stock: { text: "En stock", className: "text-stock-in" },
   on_order: { text: "Sur commande", className: "text-stock-order" },

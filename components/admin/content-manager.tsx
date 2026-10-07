@@ -8,13 +8,20 @@ import {
   updateRealisations,
   updateTestimonials,
   updateConseils,
+  updatePromoVideo,
 } from "@/features/admin/content-actions";
-import type { Realisation, Testimonial, Conseil } from "@/lib/settings";
+import type {
+  Realisation,
+  Testimonial,
+  Conseil,
+  PromoVideo,
+} from "@/lib/settings";
 
 interface Props {
   realisations: Realisation[];
   testimonials: Testimonial[];
   conseils: Conseil[];
+  promoVideo: PromoVideo;
 }
 
 function Section({
@@ -26,15 +33,17 @@ function Section({
   title: string;
   hint: string;
   children: React.ReactNode;
-  onAdd: () => void;
+  onAdd?: () => void;
 }) {
   return (
     <div className="rounded-lg border bg-card p-6">
       <div className="mb-1 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-navy-900">{title}</h2>
-        <Button variant="outline" size="sm" onClick={onAdd}>
-          <Plus className="mr-1 h-4 w-4" /> Ajouter
-        </Button>
+        {onAdd && (
+          <Button variant="outline" size="sm" onClick={onAdd}>
+            <Plus className="mr-1 h-4 w-4" /> Ajouter
+          </Button>
+        )}
       </div>
       <p className="mb-4 text-sm text-muted-foreground">{hint}</p>
       <div className="flex flex-col gap-3">{children}</div>
@@ -61,10 +70,12 @@ export function ContentManager({
   realisations: initRea,
   testimonials: initTes,
   conseils: initCon,
+  promoVideo: initVideo,
 }: Props) {
   const [realisations, setRealisations] = useState<Realisation[]>(initRea);
   const [testimonials, setTestimonials] = useState<Testimonial[]>(initTes);
   const [conseils, setConseils] = useState<Conseil[]>(initCon);
+  const [promoVideo, setPromoVideo] = useState<PromoVideo>(initVideo);
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState("");
 
@@ -256,6 +267,62 @@ export function ContentManager({
           Enregistrer les conseils
         </Button>
       </Section>
+
+      {/* Vidéo publicitaire de l'accueil */}
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Vidéo publicitaire
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Vidéo affichée sur la page d&apos;accueil (pub, démonstration de
+          service). URL YouTube ou fichier .mp4.
+        </p>
+        <div className="flex flex-col gap-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium">URL de la vidéo</label>
+              <input
+                className={inputCls}
+                placeholder="https://youtube.com/watch?v=… ou /videos/pub.mp4"
+                value={promoVideo.url}
+                onChange={(e) =>
+                  setPromoVideo((v) => ({ ...v, url: e.target.value }))
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium">Titre de la section</label>
+              <input
+                className={inputCls}
+                placeholder="Découvrez nos services"
+                value={promoVideo.title}
+                onChange={(e) =>
+                  setPromoVideo((v) => ({ ...v, title: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={promoVideo.enabled}
+              onChange={(e) =>
+                setPromoVideo((v) => ({ ...v, enabled: e.target.checked }))
+              }
+            />
+            Afficher la vidéo sur l&apos;accueil
+          </label>
+          <Button
+            onClick={() =>
+              save("Vidéo", () => updatePromoVideo(promoVideo))
+            }
+            disabled={pending}
+            className="self-start bg-cta-500 text-white hover:bg-cta-600"
+          >
+            Enregistrer la vidéo
+          </Button>
+        </div>
+      </div>
 
       {saved && (
         <p className="text-sm font-medium text-stock-in">

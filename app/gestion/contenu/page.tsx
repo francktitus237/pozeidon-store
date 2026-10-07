@@ -4,6 +4,7 @@ import {
   getRealisations,
   getTestimonials,
   getConseils,
+  getPromoVideo,
 } from "@/lib/settings";
 import { ContentManager } from "@/components/admin/content-manager";
 
@@ -13,11 +14,13 @@ export default async function AdminContentPage() {
   const session = await auth();
   if (!session) redirect("/connexion");
 
-  const [realisations, testimonials, conseils] = await Promise.all([
-    getRealisations(),
-    getTestimonials(),
-    getConseils(),
-  ]);
+  const [realisations, testimonials, conseils, promoVideo] =
+    await Promise.all([
+      getRealisations(),
+      getTestimonials(),
+      getConseils(),
+      getPromoVideo(),
+    ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -31,6 +34,7 @@ export default async function AdminContentPage() {
         realisations={realisations}
         testimonials={testimonials}
         conseils={conseils}
+        promoVideo={promoVideo}
       />
     </div>
   );

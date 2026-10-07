@@ -41,6 +41,7 @@ type Row = {
   status: string;
   categoryId: string;
   images: unknown;
+  videoUrl: string | null;
   installationAvailable: boolean;
 };
 
@@ -139,6 +140,7 @@ export function ProductManager({
       status: String(f.get("status")),
       categoryId: String(f.get("categoryId")),
       image: imagePath,
+      videoUrl: String(f.get("videoUrl") || ""),
       installationAvailable: f.get("installationAvailable") === "on",
     };
     startTransition(async () => {
@@ -303,6 +305,21 @@ export function ProductManager({
               defaultValue={editing?.description ?? ""}
               className={inputCls}
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium">
+              Vidéo (URL YouTube ou fichier .mp4) — optionnel
+            </label>
+            <Input
+              name="videoUrl"
+              type="url"
+              defaultValue={editing?.videoUrl ?? ""}
+              placeholder="https://youtube.com/watch?v=… ou /videos/demo.mp4"
+            />
+            <p className="text-xs text-muted-foreground">
+              La vidéo est affichée sur la fiche produit (démonstration, pub).
+            </p>
           </div>
 
           <label className="flex items-center gap-2 text-sm">

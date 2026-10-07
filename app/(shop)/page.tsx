@@ -6,6 +6,7 @@ import { FlashSale } from "@/components/shop/flash-sale";
 import { ProductCard } from "@/components/shop/product-card";
 import { SectionHeading } from "@/components/shop/section-heading";
 import { InstallationCta } from "@/components/shop/installation-cta";
+import { PromoVideoSection } from "@/components/shop/promo-video";
 import { Realisations } from "@/components/shop/realisations";
 import { Testimonials } from "@/components/shop/testimonials";
 import { BlogPreview } from "@/components/shop/blog-preview";
@@ -67,6 +68,9 @@ export default async function Home() {
 
       <Reveal delay={80}>
         <InstallationCta />
+      </Reveal>
+      <Reveal delay={80}>
+        <PromoVideoSection />
       </Reveal>
       <Reveal delay={80}>
         <Realisations />
