@@ -39,7 +39,7 @@ const SLIDES = [
     subtitle: "Répéteurs WiFi, écrans, batteries, claviers, chargeurs",
     cta: "Voir le catalogue",
     href: "/boutique/accessoires-informatique",
-    image: "/images/connecteur.jpg",
+    image: "/images/repetiteur.svg",
   },
 ];
 
@@ -59,7 +59,7 @@ export function HeroBanner() {
                 alt=""
                 fill
                 sizes="(max-width: 768px) 100vw, 75vw"
-                className="object-cover"
+                className="animate-kenburns object-cover"
                 priority={i === 0}
               />
               <div className="absolute inset-0 bg-navy-900/70" />

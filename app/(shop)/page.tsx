@@ -12,6 +12,7 @@ import { BlogPreview } from "@/components/shop/blog-preview";
 import { FLASH_SALE_END } from "@/features/products/data";
 import { getFlashProducts, getProducts } from "@/features/products/queries";
 import { CATEGORIES } from "@/lib/constants";
+import { Reveal } from "@/components/reveal";
 
 export default async function Home() {
   const [products, flashProducts] = await Promise.all([
@@ -27,57 +28,55 @@ export default async function Home() {
   return (
     <main className="container mx-auto flex flex-col gap-8 px-4 py-6">
       {/* Bannière + colonne catégories */}
-      <div className="animate-fade-up flex gap-4">
+      <Reveal className="flex gap-4">
         <CategorySidebar />
         <div className="min-w-0 flex-1">
           <HeroBanner />
         </div>
-      </div>
+      </Reveal>
 
-      <div className="animate-fade-up" style={{ animationDelay: "80ms" }}>
+      <Reveal delay={80}>
         <QuickCategories />
-      </div>
-      <div className="animate-fade-up" style={{ animationDelay: "160ms" }}>
+      </Reveal>
+      <Reveal delay={120}>
         <TrustBand />
-      </div>
+      </Reveal>
 
       {flashProducts.length > 0 && (
-        <div className="animate-fade-up" style={{ animationDelay: "240ms" }}>
+        <Reveal delay={160}>
           <FlashSale products={flashProducts} endsAt={FLASH_SALE_END} />
-        </div>
+        </Reveal>
       )}
 
       {/* Grilles par catégorie */}
       {sections.map((s, i) => (
-        <section
-          key={s.slug}
-          className="animate-fade-up"
-          style={{ animationDelay: `${320 + i * 80}ms` }}
-        >
-          <SectionHeading
-            title={s.name}
-            href={`/boutique/${s.slug}`}
-          />
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {s.items.map((p) => (
-              <ProductCard key={p.id} product={p} />
-            ))}
-          </div>
-        </section>
+        <Reveal key={s.slug} delay={200 + i * 60}>
+          <section>
+            <SectionHeading
+              title={s.name}
+              href={`/boutique/${s.slug}`}
+            />
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {s.items.map((p) => (
+                <ProductCard key={p.id} product={p} />
+              ))}
+            </div>
+          </section>
+        </Reveal>
       ))}
 
-      <div className="animate-fade-up" style={{ animationDelay: "400ms" }}>
+      <Reveal delay={80}>
         <InstallationCta />
-      </div>
-      <div className="animate-fade-up" style={{ animationDelay: "480ms" }}>
+      </Reveal>
+      <Reveal delay={80}>
         <Realisations />
-      </div>
-      <div className="animate-fade-up" style={{ animationDelay: "560ms" }}>
+      </Reveal>
+      <Reveal delay={80}>
         <Testimonials />
-      </div>
-      <div className="animate-fade-up" style={{ animationDelay: "640ms" }}>
+      </Reveal>
+      <Reveal delay={80}>
         <BlogPreview />
-      </div>
+      </Reveal>
     </main>
   );
 }

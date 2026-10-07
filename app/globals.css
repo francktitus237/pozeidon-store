@@ -180,6 +180,15 @@
   }
 }
 
+@keyframes kenburns {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.08);
+  }
+}
+
 @layer utilities {
   .animate-marquee {
     animation: marquee 20s linear infinite;
@@ -187,10 +196,14 @@
   .animate-fade-up {
     animation: fade-up 0.5s ease-out both;
   }
+  .animate-kenburns {
+    animation: kenburns 7s ease-out both;
+  }
 
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee,
-    .animate-fade-up {
+    .animate-fade-up,
+    .animate-kenburns {
       animation: none;
     }
   }

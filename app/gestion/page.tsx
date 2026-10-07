@@ -3,7 +3,15 @@ export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { orders, products, installationRequests } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
-import { Package, ShoppingBag, Wrench, AlertTriangle } from "lucide-react";
+import {
+  Package,
+  ShoppingBag,
+  Wrench,
+  AlertTriangle,
+  ImageIcon,
+  Settings,
+  ExternalLink,
+} from "lucide-react";
 import Link from "next/link";
 
 const LOW_STOCK = 5;
