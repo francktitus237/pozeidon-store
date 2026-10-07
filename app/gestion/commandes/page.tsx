@@ -1,5 +1,6 @@
 export const dynamic = "force-dynamic";
 
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
@@ -52,7 +53,12 @@ export default async function AdminOrdersPage() {
                 return (
                   <tr key={o.id} className="border-b align-top last:border-0">
                     <td className="px-4 py-3 font-mono font-medium">
-                      {o.number}
+                      <Link
+                        href={`/gestion/commandes/${o.id}`}
+                        className="text-sky-600 hover:underline"
+                      >
+                        {o.number}
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {new Date(o.createdAt).toLocaleDateString("fr-FR")}

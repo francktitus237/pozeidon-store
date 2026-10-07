@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { getProducts } from "@/features/products/queries";
+import { getCategories, getProducts } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
-import { CATEGORIES } from "@/lib/constants";
 import { SearchX } from "lucide-react";
 
 export const metadata = { title: "Boutique — Pozeidon Engineering" };
@@ -32,7 +31,7 @@ function matchesQuery(
 export default async function BoutiquePage({ searchParams }: Props) {
   const { q, tri = "", dispo = "" } = await searchParams;
   const query = q?.trim() ?? "";
-  const all = await getProducts();
+  const [all, categories] = await Promise.all([getProducts(), getCategories()]);
   let products = query ? all.filter((p) => matchesQuery(p, query)) : [...all];
 
   if (dispo === "stock")
@@ -73,7 +72,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
         >
           Tout
         </Link>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Link
             key={c.slug}
             href={`/boutique/${c.slug}`}

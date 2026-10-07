@@ -1,10 +1,14 @@
 import Link from "next/link";
 import { MapPin, MessageCircle, Phone, Clock } from "lucide-react";
-import { CATEGORIES, PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
+import { PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
 import { getContact } from "@/lib/settings";
+import { getCategories } from "@/features/products/queries";
 
 export async function Footer() {
-  const contact = await getContact();
+  const [contact, categories] = await Promise.all([
+    getContact(),
+    getCategories(),
+  ]);
   return (
     <footer className="mt-16 bg-navy-900 text-sky-100">
       <div className="container mx-auto grid gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
@@ -40,7 +44,7 @@ export async function Footer() {
         <div>
           <p className="mb-3 font-semibold text-white">Nos produits</p>
           <ul className="grid grid-cols-1 gap-2 text-sm">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <li key={c.slug}>
                 <Link href={`/boutique/${c.slug}`} className="hover:text-white">
                   {c.name}

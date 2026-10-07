@@ -76,6 +76,19 @@ export async function register() {
         status TEXT NOT NULL DEFAULT 'new',
         created_at TIMESTAMP NOT NULL DEFAULT now()
       )`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS promo_codes (
+        id TEXT PRIMARY KEY,
+        code TEXT NOT NULL UNIQUE,
+        percent INTEGER NOT NULL,
+        active BOOLEAN NOT NULL DEFAULT true,
+        max_uses INTEGER,
+        used_count INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+      )`;
+    // Colonnes ajoutées après la première version (bases existantes)
+    await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0`;
+    await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT`;
     console.log("[db] Schéma Postgres vérifié/créé.");
 
     // ── Synchronisation du catalogue initial ──

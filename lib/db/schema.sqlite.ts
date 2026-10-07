@@ -37,6 +37,18 @@ export const products = sqliteTable("products", {
     .$defaultFn(() => new Date()),
 });
 
+export const promoCodes = sqliteTable("promo_codes", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  percent: integer("percent").notNull(), // remise en %
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  maxUses: integer("max_uses"),
+  usedCount: integer("used_count").notNull().default(0),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export const orders = sqliteTable("orders", {
   id: text("id").primaryKey(),
   number: text("number").notNull().unique(),
@@ -53,6 +65,7 @@ export const orders = sqliteTable("orders", {
   total: integer("total").notNull(),
   paymentMethod: text("payment_method").notNull(),
   promoCode: text("promo_code"),
+  discount: integer("discount").notNull().default(0),
   status: text("status").notNull().default("pending"),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

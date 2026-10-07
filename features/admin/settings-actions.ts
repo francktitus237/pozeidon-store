@@ -4,7 +4,12 @@ import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
-import type { Announcement, CookieBanner, ContactInfo } from "@/lib/settings";
+import type {
+  Announcement,
+  CookieBanner,
+  ContactInfo,
+  PaymentConfig,
+} from "@/lib/settings";
 
 export async function updateAnnouncement(data: Announcement) {
   const session = await auth();
@@ -73,5 +78,28 @@ export async function updateContact(data: ContactInfo) {
 
   revalidatePath("/");
   revalidatePath("/contact");
+  revalidatePath("/gestion/reglages");
+}
+
+export async function updatePaymentConfig(data: PaymentConfig) {
+  const session = await auth();
+  if (!session) throw new Error("Non authentifié");
+
+  await db
+    .insert(settings)
+    .values({
+      key: "payment_config",
+      value: JSON.stringify(data),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: {
+        value: JSON.stringify(data),
+        updatedAt: new Date(),
+      },
+    });
+
+  revalidatePath("/commande");
   revalidatePath("/gestion/reglages");
 }

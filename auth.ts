@@ -17,13 +17,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         username: { label: "Identifiant" },
         password: { label: "Mot de passe", type: "password" },
       },
-      authorize(credentials) {
-        const ok =
-          credentials?.username === ADMIN_USERNAME &&
-          credentials?.password === ADMIN_PASSWORD;
-        if (!ok) return null;
-        // TODO prod : comparer un hash bcrypt plutôt que le mot de passe en clair
-        return { id: "admin", name: "Administrateur" };
+      async authorize(credentials) {
+        const username = String(credentials?.username ?? "");
+        const password = String(credentials?.password ?? "");
+        if (!username || !password) return null;
+
+        // Compte principal : variables d'environnement
+        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+          return { id: "admin", name: ADMIN_USERNAME };
+        }
+
+        // Comptes supplémentaires gérés dans Réglages → Comptes admin
+        const { findAdminUser } = await import("@/lib/settings");
+        const { verifyPassword } = await import("@/lib/admin-auth");
+        const user = await findAdminUser(username);
+        if (user && verifyPassword(password, user.passwordHash)) {
+          return { id: user.id, name: user.username };
+        }
+        return null;
       },
     }),
   ],

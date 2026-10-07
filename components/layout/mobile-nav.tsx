@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, ChevronRight, User } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { CATEGORIES, SITE_NAME } from "@/lib/constants";
+import { SITE_NAME } from "@/lib/constants";
 
 const LINKS = [
   { href: "/boutique", label: "Boutique" },
@@ -17,7 +17,11 @@ const LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export function MobileNav() {
+export function MobileNav({
+  categories,
+}: {
+  categories: { slug: string; name: string }[];
+}) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -68,7 +72,7 @@ export function MobileNav() {
             Catégories
           </p>
           <nav className="flex flex-col px-2">
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <Link
                 key={c.slug}
                 href={`/boutique/${c.slug}`}

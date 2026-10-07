@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, SearchX } from "lucide-react";
-import { getProducts } from "@/features/products/queries";
+import { getCategories, getProducts } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
-import { CATEGORIES } from "@/lib/constants";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +14,8 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorie } = await params;
-  const cat = CATEGORIES.find((c) => c.slug === categorie);
+  const cats = await getCategories();
+  const cat = cats.find((c) => c.slug === categorie);
   return { title: `${cat?.name ?? "Catégorie"} — Pozeidon Engineering` };
 }
 
@@ -30,10 +30,9 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorie } = await params;
   const { tri = "", dispo = "" } = await searchParams;
 
-  const category = CATEGORIES.find((c) => c.slug === categorie);
+  const [all, categories] = await Promise.all([getProducts(), getCategories()]);
+  const category = categories.find((c) => c.slug === categorie);
   if (!category) notFound();
-
-  const all = await getProducts();
   // "promotions" n'est pas une vraie catégorie : elle regroupe les produits
   // qui ont un prix promo, quelle que soit leur catégorie d'origine.
   let items =
@@ -114,7 +113,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         >
           Tout
         </Link>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <Link
             key={c.slug}
             href={`/boutique/${c.slug}`}

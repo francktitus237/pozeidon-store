@@ -1,10 +1,11 @@
 // Requêtes produits côté serveur (DB d'abord, fallback sur les données démo)
 
 import { db } from "@/lib/db";
-import { products } from "@/lib/db/schema";
+import { categories, products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { Product } from "@/types";
 import { DEMO_PRODUCTS, FLASH_PRODUCTS } from "./data";
+import { CATEGORIES } from "@/lib/constants";
 
 function toProduct(row: typeof products.$inferSelect): Product {
   return {
@@ -55,5 +56,22 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     return DEMO_PRODUCTS.find((p) => p.slug === slug) ?? null;
   } catch {
     return DEMO_PRODUCTS.find((p) => p.slug === slug) ?? null;
+  }
+}
+
+/**
+ * Catégories gérées dans l'admin (`/gestion/categories`).
+ * Fallback sur les catégories par défaut si la table est vide/inaccessible,
+ * pour que la boutique fonctionne toujours.
+ */
+export async function getCategories(): Promise<
+  { slug: string; name: string; image?: string | null }[]
+> {
+  try {
+    const rows = await db.select().from(categories);
+    if (rows.length === 0) return [...CATEGORIES];
+    return rows;
+  } catch {
+    return [...CATEGORIES];
   }
 }

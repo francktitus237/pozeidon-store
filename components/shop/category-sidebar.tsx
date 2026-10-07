@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { CATEGORIES } from "@/lib/constants";
+import { getCategories } from "@/features/products/queries";
 
-export function CategorySidebar() {
+export async function CategorySidebar() {
+  const categories = await getCategories();
   return (
     <nav
       aria-label="Catégories"
@@ -12,7 +13,7 @@ export function CategorySidebar() {
         Catégories
       </p>
       <ul>
-        {CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <li key={c.slug}>
             <Link
               href={`/boutique/${c.slug}`}

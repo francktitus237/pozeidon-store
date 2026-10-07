@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { orders } from "@/lib/db/schema";
+import { orders, promoCodes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
@@ -32,6 +32,7 @@ const createOrderSchema = z.object({
     )
     .min(1, "Panier vide"),
   paymentMethod: z.enum(["mtn_momo", "orange_money", "cash_on_delivery"]),
+  promoCode: z.string().optional(),
 });
 
 function generateOrderNumber(): string {
@@ -48,7 +49,31 @@ export async function createOrder(input: unknown) {
 
   const subtotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
   const deliveryFee = DELIVERY_CITIES[data.city] ?? 0;
-  const total = subtotal + deliveryFee;
+
+  // Code promo : validé côté serveur, remise appliquée sur le sous-total
+  let discount = 0;
+  let promoCodeUsed: string | null = null;
+  const code = data.promoCode?.trim().toUpperCase();
+  if (code) {
+    const [promo] = await db
+      .select()
+      .from(promoCodes)
+      .where(eq(promoCodes.code, code));
+    if (!promo || !promo.active) {
+      return { error: `Le code promo « ${code} » est invalide.` };
+    }
+    if (promo.maxUses != null && promo.usedCount >= promo.maxUses) {
+      return { error: `Le code promo « ${code} » a atteint sa limite d'utilisation.` };
+    }
+    discount = Math.round((subtotal * promo.percent) / 100);
+    promoCodeUsed = promo.code;
+    await db
+      .update(promoCodes)
+      .set({ usedCount: promo.usedCount + 1 })
+      .where(eq(promoCodes.id, promo.id));
+  }
+
+  const total = subtotal - discount + deliveryFee;
   const orderNumber = generateOrderNumber();
 
   await db.insert(orders).values({
@@ -66,11 +91,27 @@ export async function createOrder(input: unknown) {
     deliveryFee,
     total,
     paymentMethod: data.paymentMethod as PaymentMethod,
+    promoCode: promoCodeUsed,
+    discount,
     status: "pending",
   });
 
   revalidatePath("/gestion/commandes");
   return { ok: true, number: orderNumber };
+}
+
+/** Vérifie un code promo sans le consommer (affichage au checkout). */
+export async function checkPromo(code: string) {
+  const normalized = code.trim().toUpperCase();
+  if (!normalized) return { error: "Entrez un code." };
+  const [promo] = await db
+    .select()
+    .from(promoCodes)
+    .where(eq(promoCodes.code, normalized));
+  if (!promo || !promo.active) return { error: "Code invalide." };
+  if (promo.maxUses != null && promo.usedCount >= promo.maxUses)
+    return { error: "Ce code a atteint sa limite d'utilisation." };
+  return { ok: true, percent: promo.percent, code: promo.code };
 }
 
 export async function trackOrder(number: string, phone: string) {

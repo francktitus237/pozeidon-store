@@ -12,6 +12,9 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  Tag,
+  FolderTree,
+  ShieldCheck,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
@@ -20,15 +23,23 @@ import { SITE_NAME } from "@/lib/constants";
 const ITEMS = [
   { href: "/gestion", icon: LayoutDashboard, label: "Tableau de bord" },
   { href: "/gestion/articles", icon: Package, label: "Articles" },
-  { href: "/gestion/commandes", icon: ShoppingBag, label: "Commandes" },
-  { href: "/gestion/installations", icon: Wrench, label: "Installations" },
+  { href: "/gestion/categories", icon: FolderTree, label: "Catégories" },
+  { href: "/gestion/commandes", icon: ShoppingBag, label: "Commandes", badgeKey: "orders" },
+  { href: "/gestion/installations", icon: Wrench, label: "Installations", badgeKey: "installations" },
   { href: "/gestion/clients", icon: Users, label: "Clients" },
+  { href: "/gestion/promos", icon: Tag, label: "Codes promo" },
   { href: "/gestion/contenu", icon: ImageIcon, label: "Contenu du site" },
   { href: "/gestion/statistiques", icon: BarChart3, label: "Statistiques" },
+  { href: "/gestion/comptes", icon: ShieldCheck, label: "Comptes admin" },
   { href: "/gestion/reglages", icon: Settings, label: "Réglages" },
-];
+] as const;
 
-export function AdminSidebar() {
+export interface SidebarBadges {
+  orders?: number;
+  installations?: number;
+}
+
+export function AdminSidebar({ badges }: { badges?: SidebarBadges }) {
   const pathname = usePathname();
 
   return (
@@ -69,7 +80,14 @@ export function AdminSidebar() {
                   }`}
                 >
                   <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {"badgeKey" in item &&
+                    item.badgeKey != null &&
+                    (badges?.[item.badgeKey] ?? 0) > 0 && (
+                      <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-cta-500 px-1.5 text-[10px] font-bold text-white">
+                        {badges?.[item.badgeKey]}
+                      </span>
+                    )}
                 </Link>
               </li>
             );

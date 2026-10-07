@@ -9,6 +9,7 @@ import {
 } from "@/lib/settings";
 import { WhatsAppButton } from "./whatsapp-button";
 import { MobileNav } from "./mobile-nav";
+import { getCategories } from "@/features/products/queries";
 import { CartButton } from "./cart-button";
 import { SearchBar } from "./search-bar";
 
@@ -21,9 +22,10 @@ const NAV_LINKS = [
 ];
 
 export async function Header() {
-  const [announcement, contact] = await Promise.all([
+  const [announcement, contact, categories] = await Promise.all([
     getAnnouncement(),
     getContact(),
+    getCategories(),
   ]);
 
   return (
@@ -53,7 +55,7 @@ export async function Header() {
 
       {/* Barre principale */}
       <div className="container mx-auto flex h-16 items-center gap-3 px-4">
-        <MobileNav />
+        <MobileNav categories={categories} />
 
         <Link href="/" className="flex shrink-0 items-center gap-2.5">
           <Image

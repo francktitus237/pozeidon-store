@@ -11,21 +11,27 @@ import { Realisations } from "@/components/shop/realisations";
 import { Testimonials } from "@/components/shop/testimonials";
 import { BlogPreview } from "@/components/shop/blog-preview";
 import { FLASH_SALE_END } from "@/features/products/data";
-import { getFlashProducts, getProducts } from "@/features/products/queries";
-import { CATEGORIES } from "@/lib/constants";
+import {
+  getCategories,
+  getFlashProducts,
+  getProducts,
+} from "@/features/products/queries";
 import { Reveal } from "@/components/reveal";
 
 export default async function Home() {
-  const [products, flashProducts] = await Promise.all([
+  const [products, flashProducts, categories] = await Promise.all([
     getProducts(),
     getFlashProducts(),
+    getCategories(),
   ]);
 
   // Une section par catégorie qui contient des produits
-  const sections = CATEGORIES.map((c) => ({
-    ...c,
-    items: products.filter((p) => p.categoryId === c.slug).slice(0, 8),
-  })).filter((s) => s.items.length > 0);
+  const sections = categories
+    .map((c) => ({
+      ...c,
+      items: products.filter((p) => p.categoryId === c.slug).slice(0, 8),
+    }))
+    .filter((s) => s.items.length > 0);
   return (
     <main className="container mx-auto flex flex-col gap-8 px-4 py-6">
       {/* Bannière + colonne catégories */}

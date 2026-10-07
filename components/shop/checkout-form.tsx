@@ -5,14 +5,22 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { createOrder } from "@/features/orders/actions";
+import { checkPromo, createOrder } from "@/features/orders/actions";
 import { DELIVERY_CITIES, PAYMENT_METHODS, formatPrice } from "@/lib/constants";
 import type { PaymentMethod } from "@/types";
+import type { PaymentConfig } from "@/lib/settings";
+import { Tag } from "lucide-react";
 
 const inputCls =
   "w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-sky-500";
 
-export function CheckoutForm() {
+const METHOD_ENABLED: Record<PaymentMethod, keyof PaymentConfig> = {
+  mtn_momo: "momoEnabled",
+  orange_money: "orangeEnabled",
+  cash_on_delivery: "codEnabled",
+};
+
+export function CheckoutForm({ payments }: { payments: PaymentConfig }) {
   const router = useRouter();
   const { items, total, clearCart } = useCart();
   const [city, setCity] = useState("Douala");
@@ -20,8 +28,37 @@ export function CheckoutForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Code promo
+  const [promoInput, setPromoInput] = useState("");
+  const [promo, setPromo] = useState<{ code: string; percent: number } | null>(
+    null
+  );
+  const [promoError, setPromoError] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+
+  const enabledMethods = PAYMENT_METHODS.filter(
+    (m) => payments[METHOD_ENABLED[m.id]]
+  );
+
   const deliveryFee = DELIVERY_CITIES[city] ?? 0;
-  const grandTotal = total + deliveryFee;
+  const discount = promo ? Math.round((total * promo.percent) / 100) : 0;
+  const grandTotal = total - discount + deliveryFee;
+
+  async function applyPromo() {
+    setPromoError("");
+    setPromoLoading(true);
+    try {
+      const res = await checkPromo(promoInput);
+      if ("error" in res && res.error) {
+        setPromo(null);
+        setPromoError(res.error);
+      } else if (res.ok) {
+        setPromo({ code: res.code, percent: res.percent });
+      }
+    } finally {
+      setPromoLoading(false);
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -56,6 +93,7 @@ export function CheckoutForm() {
         landmark: String(fd.get("landmark") ?? ""),
         items,
         paymentMethod: payment,
+        promoCode: promo?.code,
       });
 
       if ("error" in result && result.error) {
@@ -171,7 +209,7 @@ export function CheckoutForm() {
             <CreditCard className="h-5 w-5 text-sky-600" /> Paiement
           </h2>
           <div className="space-y-2">
-            {PAYMENT_METHODS.map((m) => (
+            {enabledMethods.map((m) => (
               <label
                 key={m.id}
                 className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm transition ${
@@ -192,10 +230,17 @@ export function CheckoutForm() {
               </label>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Pour MoMo / Orange Money, notre équipe vous envoie les instructions
-            de paiement après validation de la commande.
-          </p>
+          {payments.momoEnabled && payments.momoNumber && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              MTN MoMo : {payments.momoNumber} — {payments.momoInstructions}
+            </p>
+          )}
+          {payments.orangeEnabled && payments.orangeNumber && (
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Orange Money : {payments.orangeNumber} —{" "}
+              {payments.orangeInstructions}
+            </p>
+          )}
         </section>
       </div>
 
@@ -214,11 +259,62 @@ export function CheckoutForm() {
             </li>
           ))}
         </ul>
+        {/* Code promo */}
+        <div className="mb-4 border-t pt-4">
+          <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium">
+            <Tag className="h-3.5 w-3.5" /> Code promo
+          </label>
+          <div className="flex gap-2">
+            <input
+              value={promoInput}
+              onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
+              placeholder="EX : BIENVENUE10"
+              className={`${inputCls} flex-1 uppercase`}
+              disabled={!!promo}
+            />
+            {promo ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setPromo(null);
+                  setPromoInput("");
+                }}
+                className="rounded-md border px-3 text-xs font-medium hover:bg-sky-50"
+              >
+                Retirer
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={applyPromo}
+                disabled={promoLoading || !promoInput.trim()}
+                className="rounded-md bg-navy-900 px-3 text-xs font-medium text-white hover:bg-navy-700 disabled:opacity-50"
+              >
+                {promoLoading ? "…" : "Appliquer"}
+              </button>
+            )}
+          </div>
+          {promo && (
+            <p className="mt-1.5 text-xs font-medium text-stock-in">
+              Code {promo.code} appliqué : -{promo.percent}%
+            </p>
+          )}
+          {promoError && (
+            <p className="mt-1.5 text-xs text-red-600">{promoError}</p>
+          )}
+        </div>
+
         <dl className="space-y-2 border-t pt-4 text-sm">
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Sous-total</dt>
             <dd className="font-medium">{formatPrice(total)}</dd>
           </div>
+          {discount > 0 && (
+            <div className="flex justify-between text-cta-600">
+              <dt>Remise ({promo?.code})</dt>
+              <dd>-{formatPrice(discount)}</dd>
+            </div>
+          )}
           <div className="flex justify-between">
             <dt className="text-muted-foreground">Livraison</dt>
             <dd className="font-medium">

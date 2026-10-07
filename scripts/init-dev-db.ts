@@ -71,7 +71,26 @@ sqlite.exec(`
     status TEXT NOT NULL DEFAULT 'new',
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+  CREATE TABLE IF NOT EXISTS promo_codes (
+    id TEXT PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    percent INTEGER NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    max_uses INTEGER,
+    used_count INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
 `);
+
+// Ajout des colonnes apparues après la première version (bases existantes)
+const addColumn = (table: string, col: string, def: string) => {
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!cols.some((c) => c.name === col)) {
+    sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${def}`);
+  }
+};
+addColumn("orders", "discount", "INTEGER NOT NULL DEFAULT 0");
+addColumn("products", "video_url", "TEXT");
 
 sqlite.pragma("foreign_keys = OFF"); // les ids démo ne sont pas toujours cohérents
 const db = drizzle(sqlite, { schema });

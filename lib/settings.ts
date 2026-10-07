@@ -209,3 +209,93 @@ export function youtubeEmbedUrl(url: string): string | null {
     url.match(/youtube\.com\/embed\/([\w-]{11})/);
   return m ? `https://www.youtube.com/embed/${m[1]}` : null;
 }
+
+// ── Configuration des paiements (éditable dans Réglages) ──
+
+export interface PaymentConfig {
+  momoEnabled: boolean;
+  momoNumber: string;
+  momoInstructions: string;
+  orangeEnabled: boolean;
+  orangeNumber: string;
+  orangeInstructions: string;
+  codEnabled: boolean;
+}
+
+const DEFAULT_PAYMENTS: PaymentConfig = {
+  momoEnabled: true,
+  momoNumber: "",
+  momoInstructions:
+    "Notre équipe vous envoie le numéro marchand MTN après validation.",
+  orangeEnabled: true,
+  orangeNumber: "",
+  orangeInstructions:
+    "Notre équipe vous envoie le numéro marchand Orange après validation.",
+  codEnabled: true,
+};
+
+export async function getPaymentConfig(): Promise<PaymentConfig> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, "payment_config"),
+    });
+    if (!row) return DEFAULT_PAYMENTS;
+    const parsed = JSON.parse(row.value) as Partial<PaymentConfig>;
+    return { ...DEFAULT_PAYMENTS, ...parsed };
+  } catch {
+    return DEFAULT_PAYMENTS;
+  }
+}
+
+// ── Comptes administrateurs (éditable dans Réglages) ──
+// Les mots de passe sont stockés hachés (SHA-256 + sel), jamais en clair.
+
+export interface AdminUser {
+  id: string;
+  username: string;
+  passwordHash: string; // format "sel:hash"
+  createdAt: string;
+}
+
+export async function readAdminUsers(): Promise<AdminUser[]> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, "admin_users"),
+    });
+    if (!row) return [];
+    const parsed = JSON.parse(row.value);
+    return Array.isArray(parsed) ? (parsed as AdminUser[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function getAdminUsers(): Promise<
+  { id: string; username: string; createdAt: string }[]
+> {
+  const users = await readAdminUsers();
+  // Ne jamais exposer les hash côté client
+  return users.map(({ id, username, createdAt }) => ({
+    id,
+    username,
+    createdAt,
+  }));
+}
+
+export async function findAdminUser(
+  username: string
+): Promise<AdminUser | null> {
+  const users = await readAdminUsers();
+  return users.find((u) => u.username === username) ?? null;
+}
+
+export async function saveAdminUsers(users: AdminUser[]) {
+  const { settings } = await import("@/lib/db/schema");
+  await db
+    .insert(settings)
+    .values({ key: "admin_users", value: JSON.stringify(users) })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: { value: JSON.stringify(users), updatedAt: new Date() },
+    });
+}

@@ -39,6 +39,18 @@ export const products = pgTable("products", {
     .defaultNow(),
 });
 
+export const promoCodes = pgTable("promo_codes", {
+  id: text("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  percent: integer("percent").notNull(), // remise en %
+  active: boolean("active").notNull().default(true),
+  maxUses: integer("max_uses"),
+  usedCount: integer("used_count").notNull().default(0),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
+});
+
 export const orders = pgTable("orders", {
   id: text("id").primaryKey(),
   number: text("number").notNull().unique(),
@@ -55,6 +67,7 @@ export const orders = pgTable("orders", {
   total: integer("total").notNull(),
   paymentMethod: text("payment_method").notNull(),
   promoCode: text("promo_code"),
+  discount: integer("discount").notNull().default(0),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at")
     .notNull()
