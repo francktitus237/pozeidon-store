@@ -17,7 +17,7 @@ const SLIDES = [
     title: "Ordinateurs neufs & occasion",
     subtitle: "Unités centrales, desktop complets — contrôle qualité garanti",
     cta: "Voir les ordinateurs",
-    href: "/boutique/ordinateurs",
+    href: "/boutique/ordinateurs-neufs",
     image: "/images/kit-starlink.jpg",
   },
   {

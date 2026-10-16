@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const SHORTCUTS = [
-  { slug: "ordinateurs", label: "Ordinateurs", icon: Monitor },
+  { slug: "ordinateurs-neufs", label: "Ordinateurs", icon: Monitor },
   { slug: "accessoires-starlink", label: "Starlink", icon: Antenna },
   {
     slug: "accessoires-informatique",

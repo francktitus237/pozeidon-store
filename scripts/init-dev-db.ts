@@ -92,6 +92,21 @@ const addColumn = (table: string, col: string, def: string) => {
 addColumn("orders", "discount", "INTEGER NOT NULL DEFAULT 0");
 addColumn("products", "video_url", "TEXT");
 
+// Migration : scinder l'ancienne catégorie "ordinateurs" en neufs / occasion
+sqlite.exec(`
+  INSERT OR IGNORE INTO categories (id, slug, name) VALUES
+    ('ordinateurs-neufs', 'ordinateurs-neufs', 'Ordinateurs neufs'),
+    ('ordinateurs-occasion', 'ordinateurs-occasion', 'Ordinateurs d''occasion');
+  UPDATE products SET category_id = 'ordinateurs-occasion'
+    WHERE category_id = 'ordinateurs'
+      AND (name LIKE '%occasion%' OR reference LIKE '%OCC%');
+  UPDATE products SET category_id = 'ordinateurs-neufs'
+    WHERE category_id = 'ordinateurs';
+  DELETE FROM categories
+    WHERE slug = 'ordinateurs'
+      AND NOT EXISTS (SELECT 1 FROM products WHERE category_id = 'ordinateurs');
+`);
+
 sqlite.pragma("foreign_keys = OFF"); // les ids démo ne sont pas toujours cohérents
 const db = drizzle(sqlite, { schema });
 

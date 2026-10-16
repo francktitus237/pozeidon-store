@@ -3,7 +3,8 @@
 export const SITE_NAME = "Pozeidon Engineering SARL";
 
 export const CATEGORIES = [
-  { slug: "ordinateurs", name: "Ordinateurs neufs & occasion" },
+  { slug: "ordinateurs-neufs", name: "Ordinateurs neufs" },
+  { slug: "ordinateurs-occasion", name: "Ordinateurs d'occasion" },
   { slug: "accessoires-starlink", name: "Accessoires Starlink" },
   { slug: "accessoires-informatique", name: "Accessoires informatique" },
   { slug: "services", name: "Services & maintenance" },

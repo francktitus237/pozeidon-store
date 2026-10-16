@@ -106,6 +106,16 @@ export async function register() {
         ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name`;
     }
 
+    // Migration : l'ancienne catégorie "ordinateurs" est scindée en
+    // ordinateurs-neufs / ordinateurs-occasion (heuristique sur le nom).
+    await sql`
+      UPDATE products SET category_id = 'ordinateurs-occasion'
+      WHERE category_id = 'ordinateurs'
+        AND (name ILIKE '%occasion%' OR reference ILIKE '%OCC%')`;
+    await sql`
+      UPDATE products SET category_id = 'ordinateurs-neufs'
+      WHERE category_id = 'ordinateurs'`;
+
     // Supprime les anciens produits démo (les vrais articles admin sont conservés)
     await sql`
       DELETE FROM products WHERE id = ANY(${LEGACY_IDS})`;
