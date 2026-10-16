@@ -116,13 +116,18 @@ async function main() {
     console.log(`${existing.length} produits déjà en base — seed ignoré.`);
     return;
   }
-  await db.insert(schema.categories).values(
-    CATEGORIES.map((c) => ({
-      id: c.slug, // categoryId des produits démo référence le slug
-      slug: c.slug,
-      name: c.name,
-    }))
-  );
+  // onConflictDoNothing : le bloc de migration ci-dessus a peut-être déjà
+  // inséré ordinateurs-neufs / ordinateurs-occasion (base fraîche ou existante)
+  await db
+    .insert(schema.categories)
+    .values(
+      CATEGORIES.map((c) => ({
+        id: c.slug, // categoryId des produits démo référence le slug
+        slug: c.slug,
+        name: c.name,
+      }))
+    )
+    .onConflictDoNothing();
   await db.insert(schema.products).values(
     DEMO_PRODUCTS.map((p) => ({
       id: p.id,
