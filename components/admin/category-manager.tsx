@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Plus, Trash2, Pencil, FolderOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ImageField } from "@/components/admin/image-field";
 import {
   createCategory,
   updateCategory,
@@ -23,6 +24,8 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<CategoryRow | null>(null);
+  const [newImage, setNewImage] = useState("");
+  const [editImage, setEditImage] = useState("");
 
   function submit(e: React.FormEvent<HTMLFormElement>, editId?: string) {
     e.preventDefault();
@@ -31,7 +34,7 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
     const input = {
       name: String(d.get("name") ?? ""),
       description: String(d.get("description") ?? ""),
-      image: String(d.get("image") ?? ""),
+      image: editId ? editImage : newImage,
     };
     startTransition(async () => {
       const res = editId
@@ -41,6 +44,8 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
       else {
         setError("");
         setEditing(null);
+        setNewImage("");
+        setEditImage("");
         form.reset();
       }
     });
@@ -72,15 +77,10 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
           <Input id="cat-desc" name="description" className="w-64" />
         </div>
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="cat-image" className="text-sm font-medium">
-            Image (URL)
+          <label className="text-sm font-medium">
+            Image (upload ou URL)
           </label>
-          <Input
-            id="cat-image"
-            name="image"
-            placeholder="/images/categorie.jpg"
-            className="w-56"
-          />
+          <ImageField value={newImage} onChange={setNewImage} />
         </div>
         <Button
           type="submit"
@@ -130,11 +130,7 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <label className="text-sm font-medium">Image</label>
-                    <Input
-                      name="image"
-                      defaultValue={c.image ?? ""}
-                      className="w-56"
-                    />
+                    <ImageField value={editImage} onChange={setEditImage} />
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -185,6 +181,7 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
                   disabled={pending}
                   onClick={() => {
                     setEditing(c);
+                    setEditImage(c.image ?? "");
                     setError("");
                   }}
                   className="rounded-md p-2 text-muted-foreground hover:bg-sky-50 hover:text-navy-900"

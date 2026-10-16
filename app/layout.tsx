@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pozeidon Engineering — Accessoires & matériel Starlink au Cameroun",
+  title: "Pozeidon Engineering SARL — Accessoires & matériel Starlink au Cameroun",
   description:
     "Boutique d'accessoires Starlink : câbles, supports, onduleurs, protections. Livraison et installation partout au Cameroun.",
 };

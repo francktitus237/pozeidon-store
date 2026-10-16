@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 
 export const metadata = {
-  title: "Nos services — Pozeidon Engineering",
+  title: "Nos services — Pozeidon Engineering SARL",
 };
 
 const SERVICES = [

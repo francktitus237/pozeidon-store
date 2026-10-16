@@ -199,12 +199,13 @@ export function ProductManager({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Référence *</label>
+              <label className="text-sm font-medium">
+                Référence (auto si vide)
+              </label>
               <Input
                 name="reference"
-                required
                 defaultValue={editing?.reference}
-                placeholder="PZ-CB45"
+                placeholder="Ex : PZ-CB45 — générée automatiquement"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -218,11 +219,13 @@ export function ProductManager({
                 <option value="" disabled>
                   Choisir…
                 </option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
+                {[...categories]
+                  .sort((a, b) => a.name.localeCompare(b.name, "fr"))
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
               </select>
             </div>
             <div className="flex flex-col gap-1.5">

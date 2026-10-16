@@ -3,7 +3,7 @@ import { getCategories, getProducts } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
 import { SearchX } from "lucide-react";
 
-export const metadata = { title: "Boutique — Pozeidon Engineering" };
+export const metadata = { title: "Boutique — Pozeidon Engineering SARL" };
 export const dynamic = "force-dynamic";
 
 interface Props {

@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorie } = await params;
   const cats = await getCategories();
   const cat = cats.find((c) => c.slug === categorie);
-  return { title: `${cat?.name ?? "Catégorie"} — Pozeidon Engineering` };
+  return { title: `${cat?.name ?? "Catégorie"} — Pozeidon Engineering SARL` };
 }
 
 const SORTS = [

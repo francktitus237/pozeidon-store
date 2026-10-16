@@ -19,7 +19,8 @@ function toProduct(row: typeof products.$inferSelect): Product {
     stock: row.stock,
     status: row.status as Product["status"],
     categoryId: row.categoryId,
-    images: row.images as string[],
+    // Dedup : aucune image ne s'affiche en double
+    images: [...new Set(row.images as string[])],
     installationAvailable: row.installationAvailable,
     createdAt: row.createdAt.toISOString(),
   };

@@ -4,7 +4,7 @@ import { MapPin, Award, Users, Clock } from "lucide-react";
 import { getContact } from "@/lib/settings";
 import { SITE_NAME } from "@/lib/constants";
 
-export const metadata = { title: "À propos — Pozeidon Engineering" };
+export const metadata = { title: "À propos — Pozeidon Engineering SARL" };
 
 const VALUES = [
   {

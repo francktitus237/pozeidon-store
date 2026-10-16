@@ -3,7 +3,7 @@ import { InstallationForm } from "@/components/shop/installation-form";
 import { getContact } from "@/lib/settings";
 
 export const metadata = {
-  title: "Installation — Pozeidon Engineering",
+  title: "Installation — Pozeidon Engineering SARL",
 };
 
 const STEPS = [

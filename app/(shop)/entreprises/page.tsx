@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Building2, Wifi, ShieldCheck, Headset } from "lucide-react";
 import { getContact } from "@/lib/settings";
 
-export const metadata = { title: "Entreprises — Pozeidon Engineering" };
+export const metadata = { title: "Entreprises — Pozeidon Engineering SARL" };
 
 const OFFERS = [
   {
@@ -38,7 +38,7 @@ export default async function EntreprisesPage() {
         <Building2 className="mx-auto mb-3 h-10 w-10 text-sky-300" />
         <h1 className="text-3xl font-bold">Offres Entreprises &amp; Hôtels</h1>
         <p className="mx-auto mt-2 max-w-xl text-sm text-sky-100">
-          Pozeidon Engineering équipe les entreprises, hôtels et institutions :
+          Pozeidon Engineering SARL équipe les entreprises, hôtels et institutions :
           internet, matériel informatique, surveillance et maintenance.
         </p>
       </div>

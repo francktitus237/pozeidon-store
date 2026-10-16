@@ -1,6 +1,6 @@
 // Constantes métier du site
 
-export const SITE_NAME = "Pozeidon Engineering";
+export const SITE_NAME = "Pozeidon Engineering SARL";
 
 export const CATEGORIES = [
   { slug: "ordinateurs", name: "Ordinateurs neufs & occasion" },

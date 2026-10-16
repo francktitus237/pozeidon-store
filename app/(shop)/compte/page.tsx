@@ -3,7 +3,7 @@ import { OrderTracker } from "@/components/account/order-tracker";
 import { getContact } from "@/lib/settings";
 
 export const metadata = {
-  title: "Mon compte — Pozeidon Engineering",
+  title: "Mon compte — Pozeidon Engineering SARL",
 };
 
 export default async function AccountPage() {

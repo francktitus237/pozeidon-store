@@ -3,7 +3,7 @@ import { ContactForm } from "@/components/contact/contact-form";
 import { getContact } from "@/lib/settings";
 
 export const metadata = {
-  title: "Contact — Pozeidon Engineering",
+  title: "Contact — Pozeidon Engineering SARL",
 };
 
 export default async function ContactPage() {

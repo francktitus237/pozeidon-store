@@ -40,19 +40,23 @@ export async function createProduct(data: ProductFormData) {
   await requireAuth();
   const id = crypto.randomUUID();
   const slug = `${slugify(data.name)}-${id.slice(0, 6)}`;
+  // Référence auto-générée si l'admin ne la renseigne pas : PZ-XXXXXX
+  const reference =
+    data.reference.trim() ||
+    `PZ-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
 
   await db.insert(products).values({
     id,
     slug,
     name: data.name,
-    reference: data.reference,
+    reference,
     description: data.description || null,
     price: data.price,
     promoPrice: data.promoPrice || null,
     stock: data.stock,
     status: data.status,
     categoryId: data.categoryId,
-    images: [data.image].filter(Boolean),
+    images: [...new Set([data.image].filter(Boolean))],
     videoUrl: data.videoUrl || null,
     installationAvailable: data.installationAvailable,
   });
@@ -64,18 +68,29 @@ export async function createProduct(data: ProductFormData) {
 
 export async function updateProduct(id: string, data: ProductFormData) {
   await requireAuth();
+  // Si la référence est vidée, on conserve l'ancienne
+  let reference = data.reference.trim();
+  if (!reference) {
+    const [existing] = await db
+      .select({ reference: products.reference })
+      .from(products)
+      .where(eq(products.id, id));
+    reference =
+      existing?.reference ??
+      `PZ-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
+  }
   await db
     .update(products)
     .set({
       name: data.name,
-      reference: data.reference,
+      reference,
       description: data.description || null,
       price: data.price,
       promoPrice: data.promoPrice || null,
       stock: data.stock,
       status: data.status,
       categoryId: data.categoryId,
-      images: [data.image].filter(Boolean),
+      images: [...new Set([data.image].filter(Boolean))],
       videoUrl: data.videoUrl || null,
       installationAvailable: data.installationAvailable,
     })

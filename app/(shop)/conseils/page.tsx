@@ -3,7 +3,7 @@ import Link from "next/link";
 import { BookOpen, MessageCircle } from "lucide-react";
 import { getConseils, getContact } from "@/lib/settings";
 
-export const metadata = { title: "Conseils — Pozeidon Engineering" };
+export const metadata = { title: "Conseils — Pozeidon Engineering SARL" };
 export const dynamic = "force-dynamic";
 
 export default async function ConseilsPage() {
