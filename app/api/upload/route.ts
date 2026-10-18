@@ -59,11 +59,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ path: result.secure_url });
   }
 
-  // Fallback local (dev uniquement — ne survit pas aux déploiements)
+  // Fallback disque : dossier uploads/ servi par app/uploads/[name]/route.ts.
+  // (public/ est figé au build en standalone — les fichiers écrits après
+  // le démarrage n'y seraient jamais servis.)
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const safeName = `${crypto.randomUUID()}.${ext}`;
-  const dir = path.join(process.cwd(), "public", "images");
+  const dir = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
   await mkdir(dir, { recursive: true });
-  await writeFile(dir + "/" + safeName, buffer);
-  return NextResponse.json({ path: `/images/${safeName}` });
+  await writeFile(path.join(dir, safeName), buffer);
+  return NextResponse.json({ path: `/uploads/${safeName}` });
 }
