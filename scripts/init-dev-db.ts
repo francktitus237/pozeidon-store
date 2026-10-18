@@ -4,6 +4,8 @@
 
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
+import { readdirSync } from "fs";
+import path from "path";
 import * as schema from "../lib/db/schema.sqlite";
 import { CATEGORIES } from "../lib/constants";
 import { DEMO_PRODUCTS } from "../features/products/data";
@@ -109,12 +111,10 @@ sqlite.exec(`
 
 // Nettoie les références d'images mortes (fichiers perdus au rebuild)
 {
-  const { readdirSync } = await import("fs");
-  const pathMod = await import("path");
   const onDisk = new Set<string>();
   for (const d of [
-    process.env.UPLOAD_DIR ?? pathMod.join(process.cwd(), "uploads"),
-    pathMod.join(process.cwd(), "public", "images"),
+    process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads"),
+    path.join(process.cwd(), "public", "images"),
   ]) {
     try {
       for (const f of readdirSync(d)) onDisk.add(f);
