@@ -12,7 +12,14 @@ export async function initPostgres() {
   if (!url.startsWith("postgres")) return;
 
   const { default: postgres } = await import("postgres");
-  const sql = postgres(url, { prepare: false, max: 1, onnotice: () => {} });
+  const sql = postgres(url, {
+    prepare: false,
+    max: 1,
+    onnotice: () => {},
+    idle_timeout: 60 * 5,
+    max_lifetime: 60 * 30,
+    connect_timeout: 30,
+  });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof (sql as any).on === "function") {
     (sql as any).on("error", (err: Error) => {

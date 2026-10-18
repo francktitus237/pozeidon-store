@@ -12,7 +12,15 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 const url = process.env.DATABASE_URL ?? "dev.db";
 const isPostgres = url.startsWith("postgres");
 
-const pgClient = isPostgres ? postgres(url, { prepare: false, onnotice: () => {} }) : null;
+const pgClient = isPostgres
+  ? postgres(url, {
+      prepare: false,
+      onnotice: () => {},
+      idle_timeout: 60 * 5,
+      max_lifetime: 60 * 30,
+      connect_timeout: 30,
+    })
+  : null;
 if (pgClient) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (typeof (pgClient as any).on === "function") {
