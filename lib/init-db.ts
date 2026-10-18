@@ -12,7 +12,14 @@ export async function initPostgres() {
   if (!url.startsWith("postgres")) return;
 
   const { default: postgres } = await import("postgres");
-  const sql = postgres(url, { prepare: false, max: 1 });
+  const sql = postgres(url, { prepare: false, max: 1, onnotice: () => {} });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof (sql as any).on === "function") {
+    (sql as any).on("error", (err: Error) => {
+      // Les erreurs de connexion après fermeture ne doivent pas faire planter le serveur.
+      console.error("[db] postgres notice (init)", err.message);
+    });
+  }
 
   try {
     await sql`

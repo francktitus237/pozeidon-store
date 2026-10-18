@@ -12,9 +12,17 @@ import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 const url = process.env.DATABASE_URL ?? "dev.db";
 const isPostgres = url.startsWith("postgres");
 
-const pgDb = isPostgres
-  ? drizzlePg(postgres(url, { prepare: false }), { schema: pgSchema })
-  : null;
+const pgClient = isPostgres ? postgres(url, { prepare: false, onnotice: () => {} }) : null;
+if (pgClient) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (typeof (pgClient as any).on === "function") {
+    (pgClient as any).on("error", (err: Error) => {
+      console.error("[db] postgres connection error", err.message);
+    });
+  }
+}
+
+const pgDb = pgClient ? drizzlePg(pgClient, { schema: pgSchema }) : null;
 const sqliteDb = !isPostgres ? drizzleSqlite(new Database(url), { schema: sqliteSchema }) : null;
 
 // Les deux schémas exposent les mêmes formes de données ; on force le type pg.
