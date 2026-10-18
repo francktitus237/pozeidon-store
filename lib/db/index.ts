@@ -38,3 +38,25 @@ export const db = (pgDb ??
   (sqliteDb as unknown as PostgresJsDatabase<typeof pgSchema>)) as PostgresJsDatabase<
   typeof pgSchema
 >;
+
+// Filet de sécurité : certaines erreurs réseau (ECONNRESET) proviennent d'une
+// connexion fermée par un proxy ou PostgreSQL en idle. On les logue sans tuer
+// le processus, pour que le site reste stable.
+process.on("uncaughtException", (err) => {
+  const code = (err as { code?: string }).code;
+  if (code === "ECONNRESET" || code === "ECONNABORTED") {
+    console.error("[process] caught", code, "- continuing");
+    return;
+  }
+  console.error("[process] uncaughtException", err);
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  const code = (reason as { code?: string })?.code;
+  if (code === "ECONNRESET" || code === "ECONNABORTED") {
+    console.error("[process] caught unhandled", code, "- continuing");
+    return;
+  }
+  console.error("[process] unhandledRejection", reason);
+});
