@@ -107,6 +107,44 @@ sqlite.exec(`
       AND NOT EXISTS (SELECT 1 FROM products WHERE category_id = 'ordinateurs');
 `);
 
+// Nettoie les références d'images mortes (fichiers perdus au rebuild)
+{
+  const { readdirSync } = await import("fs");
+  const pathMod = await import("path");
+  const onDisk = new Set<string>();
+  for (const d of [
+    process.env.UPLOAD_DIR ?? pathMod.join(process.cwd(), "uploads"),
+    pathMod.join(process.cwd(), "public", "images"),
+  ]) {
+    try {
+      for (const f of readdirSync(d)) onDisk.add(f);
+    } catch {}
+  }
+  const alive = (src: unknown): boolean => {
+    if (typeof src !== "string") return false;
+    if (src.startsWith("http")) return true;
+    if (src.startsWith("/uploads/") || src.startsWith("/images/"))
+      return onDisk.has(src.split("/").pop() ?? "");
+    return true;
+  };
+  const rows = sqlite
+    .prepare("SELECT id, images FROM products")
+    .all() as { id: string; images: string }[];
+  const upd = sqlite.prepare("UPDATE products SET images = ? WHERE id = ?");
+  for (const r of rows) {
+    try {
+      const imgs = JSON.parse(r.images) as unknown[];
+      const kept = (Array.isArray(imgs) ? imgs : []).filter(alive);
+      if (kept.length !== imgs.length) upd.run(JSON.stringify(kept), r.id);
+    } catch {}
+  }
+  const cats = sqlite
+    .prepare("SELECT id, image FROM categories WHERE image IS NOT NULL")
+    .all() as { id: string; image: string | null }[];
+  const updCat = sqlite.prepare("UPDATE categories SET image = NULL WHERE id = ?");
+  for (const c of cats) if (c.image && !alive(c.image)) updCat.run(c.id);
+}
+
 sqlite.pragma("foreign_keys = OFF"); // les ids démo ne sont pas toujours cohérents
 const db = drizzle(sqlite, { schema });
 

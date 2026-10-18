@@ -145,6 +145,48 @@ export async function register() {
         )
         ON CONFLICT (id) DO NOTHING`;
     }
+    // Nettoyage des références d'images mortes : les fichiers uploadés
+    // avant le passage à uploads/ (ou sans volume) sont perdus au rebuild.
+    // On retire des produits/catégories les chemins locaux dont le fichier
+    // n'existe plus — le site affiche alors le placeholder au lieu d'un cadre vide.
+    const { readdirSync } = await import("fs");
+    const pathMod = await import("path");
+    const scanDirs = [
+      process.env.UPLOAD_DIR ?? pathMod.join(process.cwd(), "uploads"),
+      pathMod.join(process.cwd(), "public", "images"),
+    ];
+    const onDisk = new Set<string>();
+    for (const d of scanDirs) {
+      try {
+        for (const f of readdirSync(d)) onDisk.add(f);
+      } catch {
+        // dossier absent — ignoré
+      }
+    }
+    const alive = (src: unknown): src is string => {
+      if (typeof src !== "string") return false;
+      if (src.startsWith("http")) return true; // Cloudinary & co
+      if (src.startsWith("/uploads/") || src.startsWith("/images/"))
+        return onDisk.has(src.split("/").pop() ?? "");
+      return true; // autre asset statique de public/
+    };
+    const prodRows =
+      await sql`SELECT id, images FROM products`;
+    for (const r of prodRows) {
+      const imgs = Array.isArray(r.images) ? (r.images as unknown[]) : [];
+      const kept = imgs.filter(alive);
+      if (kept.length !== imgs.length) {
+        await sql`UPDATE products SET images = ${sql.json(kept)} WHERE id = ${r.id}`;
+      }
+    }
+    const catRows =
+      await sql`SELECT id, image FROM categories WHERE image IS NOT NULL`;
+    for (const r of catRows) {
+      if (r.image && !alive(r.image)) {
+        await sql`UPDATE categories SET image = NULL WHERE id = ${r.id}`;
+      }
+    }
+
     console.log(
       `[db] Catalogue synchronisé : ${CATEGORIES.length} catégories, ${DEMO_PRODUCTS.length} produits.`
     );
