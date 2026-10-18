@@ -24,6 +24,11 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
+# Dossier pour les uploads locaux (à persister via un volume en production)
+RUN mkdir -p /app/uploads
+ENV UPLOAD_DIR=/app/uploads
+VOLUME /app/uploads
+
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
