@@ -32,17 +32,25 @@ export async function GET(_req: Request, { params }: Props) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const filePath = path.join(UPLOAD_DIR, file);
-  try {
-    const data = await readFile(filePath);
-    const ext = file.split(".").pop()?.toLowerCase() ?? "";
-    return new NextResponse(new Uint8Array(data), {
-      headers: {
-        "Content-Type": MIME[ext] ?? "application/octet-stream",
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    });
-  } catch {
-    return new NextResponse("Not found", { status: 404 });
+  // D'abord uploads/, puis public/images en secours
+  // (fichiers écrits là avant la migration /uploads)
+  const candidates = [
+    path.join(UPLOAD_DIR, file),
+    path.join(process.cwd(), "public", "images", file),
+  ];
+  for (const filePath of candidates) {
+    try {
+      const data = await readFile(filePath);
+      const ext = file.split(".").pop()?.toLowerCase() ?? "";
+      return new NextResponse(new Uint8Array(data), {
+        headers: {
+          "Content-Type": MIME[ext] ?? "application/octet-stream",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    } catch {
+      // fichier absent ici — on tente le suivant
+    }
   }
+  return new NextResponse("Not found", { status: 404 });
 }

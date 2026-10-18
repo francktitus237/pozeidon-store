@@ -7,6 +7,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: "https", hostname: "res.cloudinary.com" }],
   },
+  // Compat : les anciens uploads étaient enregistrés sous /images/<uuid>.
+  // Si le fichier n'existe pas dans public/images, on retombe sur /uploads/.
+  async rewrites() {
+    return {
+      fallback: [
+        { source: "/images/:name", destination: "/uploads/:name" },
+      ],
+    };
+  },
 };
 
 export default nextConfig;
