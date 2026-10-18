@@ -6,7 +6,7 @@ import Link from "next/link";
 import { CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { checkPromo, createOrder } from "@/features/orders/actions";
-import { DELIVERY_CITIES, PAYMENT_METHODS, formatPrice } from "@/lib/constants";
+import { PAYMENT_METHODS, formatPrice } from "@/lib/constants";
 import type { PaymentMethod } from "@/types";
 import type { PaymentConfig } from "@/lib/settings";
 import { Tag } from "lucide-react";
@@ -20,10 +20,16 @@ const METHOD_ENABLED: Record<PaymentMethod, keyof PaymentConfig> = {
   cash_on_delivery: "codEnabled",
 };
 
-export function CheckoutForm({ payments }: { payments: PaymentConfig }) {
+export function CheckoutForm({
+  payments,
+  cities,
+}: {
+  payments: PaymentConfig;
+  cities: Record<string, number>;
+}) {
   const router = useRouter();
   const { items, total, clearCart } = useCart();
-  const [city, setCity] = useState("Douala");
+  const [city, setCity] = useState(Object.keys(cities)[0] ?? "Douala");
   const [payment, setPayment] = useState<PaymentMethod>("cash_on_delivery");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,7 +46,7 @@ export function CheckoutForm({ payments }: { payments: PaymentConfig }) {
     (m) => payments[METHOD_ENABLED[m.id]]
   );
 
-  const deliveryFee = DELIVERY_CITIES[city] ?? 0;
+  const deliveryFee = cities[city] ?? 0;
   const discount = promo ? Math.round((total * promo.percent) / 100) : 0;
   const grandTotal = total - discount + deliveryFee;
 
@@ -170,12 +176,12 @@ export function CheckoutForm({ payments }: { payments: PaymentConfig }) {
                 onChange={(e) => setCity(e.target.value)}
                 className={inputCls}
               >
-                {Object.keys(DELIVERY_CITIES).map((c) => (
+                {Object.keys(cities).map((c) => (
                   <option key={c} value={c}>
                     {c}
-                    {DELIVERY_CITIES[c] === 0
+                    {cities[c] === 0
                       ? " (gratuit)"
-                      : ` (+${formatPrice(DELIVERY_CITIES[c])})`}
+                      : ` (+${formatPrice(cities[c])})`}
                   </option>
                 ))}
               </select>

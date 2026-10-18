@@ -1,10 +1,9 @@
-// Requêtes produits côté serveur (DB d'abord, fallback sur les données démo)
+// Requêtes produits côté serveur — la base de données est la seule source.
 
 import { db } from "@/lib/db";
 import { categories, products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { Product } from "@/types";
-import { DEMO_PRODUCTS, FLASH_PRODUCTS } from "./data";
 import { CATEGORIES } from "@/lib/constants";
 
 function toProduct(row: typeof products.$inferSelect): Product {
@@ -29,22 +28,17 @@ function toProduct(row: typeof products.$inferSelect): Product {
 export async function getProducts(): Promise<Product[]> {
   try {
     const rows = await db.select().from(products);
-    if (rows.length === 0) return DEMO_PRODUCTS;
     return rows.map(toProduct);
   } catch {
-    // DB inaccessible : on reste sur les données de démo
-    return DEMO_PRODUCTS;
+    return [];
   }
 }
 
 export async function getFlashProducts(): Promise<Product[]> {
   const all = await getProducts();
-  const promos = all.filter((p) => p.promoPrice != null);
-  if (promos.length > 0) return promos.slice(0, 4);
-  // Pas de promo active : on met en avant la sélection par défaut
-  const ids = new Set(FLASH_PRODUCTS.map((p) => p.id));
-  const selection = all.filter((p) => ids.has(p.id));
-  return selection.length > 0 ? selection : all.slice(0, 4);
+  // Vente flash = uniquement les vraies promos (prix promo renseigné).
+  // Aucune promo → [] : la section n'apparaît pas sur l'accueil.
+  return all.filter((p) => p.promoPrice != null).slice(0, 4);
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
@@ -54,9 +48,9 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
       .from(products)
       .where(eq(products.slug, slug));
     if (row) return toProduct(row);
-    return DEMO_PRODUCTS.find((p) => p.slug === slug) ?? null;
+    return null;
   } catch {
-    return DEMO_PRODUCTS.find((p) => p.slug === slug) ?? null;
+    return null;
   }
 }
 

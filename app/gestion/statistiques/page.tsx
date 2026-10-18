@@ -4,6 +4,11 @@ import { db } from "@/lib/db";
 import { orders, products, installationRequests } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
 import { ShoppingCart, Package, Wrench, TrendingUp } from "lucide-react";
+import {
+  RevenueChart,
+  StatusPie,
+  TopProductsBar,
+} from "@/components/admin/stats-charts";
 
 export default async function AdminStatsPage() {
   const [allOrders, allProducts, allInstalls] = await Promise.all([
@@ -37,6 +42,43 @@ export default async function AdminStatsPage() {
       count: allOrders.filter((o) => o.status === "cancelled").length,
     },
   ];
+
+  // CA par mois (commandes non annulées), tri chronologique
+  const byMonth = new Map<string, { total: number; orders: number }>();
+  for (const o of allOrders) {
+    if (o.status === "cancelled") continue;
+    const d = new Date(o.createdAt);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const cur = byMonth.get(key) ?? { total: 0, orders: 0 };
+    cur.total += o.total;
+    cur.orders += 1;
+    byMonth.set(key, cur);
+  }
+  const revenueData = [...byMonth.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, v]) => ({
+      month: new Date(`${key}-01`).toLocaleDateString("fr-FR", {
+        month: "short",
+        year: "2-digit",
+      }),
+      ...v,
+    }));
+
+  // Top produits par quantités vendues
+  const sold = new Map<string, { quantity: number; revenue: number }>();
+  for (const o of allOrders) {
+    if (o.status === "cancelled") continue;
+    for (const it of o.items ?? []) {
+      const cur = sold.get(it.name) ?? { quantity: 0, revenue: 0 };
+      cur.quantity += it.quantity;
+      cur.revenue += it.price * it.quantity;
+      sold.set(it.name, cur);
+    }
+  }
+  const topProducts = [...sold.entries()]
+    .map(([name, v]) => ({ name, ...v }))
+    .sort((a, b) => b.quantity - a.quantity)
+    .slice(0, 8);
 
   const stats = [
     {
@@ -77,19 +119,28 @@ export default async function AdminStatsPage() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <div className="rounded-lg border bg-card p-5">
+      {/* Diagrammes */}
+      <div className="grid gap-6 xl:grid-cols-5">
+        <div className="rounded-lg border bg-card p-5 xl:col-span-3">
+          <h2 className="mb-3 font-semibold text-navy-900">
+            Chiffre d'affaires par mois
+          </h2>
+          <RevenueChart data={revenueData} />
+        </div>
+        <div className="rounded-lg border bg-card p-5 xl:col-span-2">
           <h2 className="mb-3 font-semibold text-navy-900">
             Commandes par statut
           </h2>
-          <ul className="space-y-2 text-sm">
-            {byStatus.map((s) => (
-              <li key={s.label} className="flex justify-between">
-                <span className="text-muted-foreground">{s.label}</span>
-                <span className="font-medium">{s.count}</span>
-              </li>
-            ))}
-          </ul>
+          <StatusPie data={byStatus} />
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="rounded-lg border bg-card p-5">
+          <h2 className="mb-3 font-semibold text-navy-900">
+            Top produits vendus
+          </h2>
+          <TopProductsBar data={topProducts} />
         </div>
 
         <div className="rounded-lg border bg-card p-5">
@@ -100,6 +151,14 @@ export default async function AdminStatsPage() {
           <p className="text-sm text-muted-foreground">
             Sur {allOrders.length} commande(s)
           </p>
+          <ul className="mt-4 space-y-1.5 border-t pt-3 text-sm">
+            {byStatus.map((s) => (
+              <li key={s.label} className="flex justify-between">
+                <span className="text-muted-foreground">{s.label}</span>
+                <span className="font-medium">{s.count}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>

@@ -5,11 +5,13 @@ import {
   getCookieBanner,
   getContact,
   getPaymentConfig,
+  getTariffs,
 } from "@/lib/settings";
 import { BannerSettingsForm } from "@/components/admin/banner-settings-form";
 import { CookieSettingsForm } from "@/components/admin/cookie-settings-form";
 import { ContactSettingsForm } from "@/components/admin/contact-settings-form";
 import { PaymentSettingsForm } from "@/components/admin/payment-settings-form";
+import { TariffsSettingsForm } from "@/components/admin/tariffs-settings-form";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +19,14 @@ export default async function AdminSettingsPage() {
   const session = await auth();
   if (!session) redirect("/connexion");
 
-  const [announcement, cookieBanner, contact, payments] = await Promise.all([
-    getAnnouncement(),
-    getCookieBanner(),
-    getContact(),
-    getPaymentConfig(),
-  ]);
+  const [announcement, cookieBanner, contact, payments, tariffs] =
+    await Promise.all([
+      getAnnouncement(),
+      getCookieBanner(),
+      getContact(),
+      getPaymentConfig(),
+      getTariffs(),
+    ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,6 +52,18 @@ export default async function AdminSettingsPage() {
           numéros marchands. Ils sont affichés au client pendant la commande.
         </p>
         <PaymentSettingsForm config={payments} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Livraison &amp; installation
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Frais de livraison par ville (0 = gratuit) proposés au panier et au
+          checkout, et forfaits d'installation affichés sur les fiches produit
+          éligibles. Laissez un prix vide pour « sur devis ».
+        </p>
+        <TariffsSettingsForm config={tariffs} />
       </div>
 
       <div className="rounded-lg border bg-card p-6">

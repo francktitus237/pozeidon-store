@@ -10,7 +10,7 @@ import { PromoVideoSection } from "@/components/shop/promo-video";
 import { Realisations } from "@/components/shop/realisations";
 import { Testimonials } from "@/components/shop/testimonials";
 import { BlogPreview } from "@/components/shop/blog-preview";
-import { FLASH_SALE_END } from "@/features/products/data";
+import { FLASH_SALE_END } from "@/lib/constants";
 import {
   getCategories,
   getFlashProducts,

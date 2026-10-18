@@ -6,13 +6,13 @@ import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, Truck } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
 import { Button } from "@/components/ui/button";
-import { DELIVERY_CITIES, formatPrice } from "@/lib/constants";
+import { formatPrice } from "@/lib/constants";
 
-export function CartView() {
+export function CartView({ cities }: { cities: Record<string, number> }) {
   const { items, total, updateQuantity, removeItem, clearCart } = useCart();
-  const [city, setCity] = useState<string>("Douala");
+  const [city, setCity] = useState<string>(Object.keys(cities)[0] ?? "Douala");
 
-  const deliveryFee = DELIVERY_CITIES[city] ?? 0;
+  const deliveryFee = cities[city] ?? 0;
   const grandTotal = total + deliveryFee;
 
   if (items.length === 0) {
@@ -142,12 +142,12 @@ export function CartView() {
             onChange={(e) => setCity(e.target.value)}
             className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:border-sky-500"
           >
-            {Object.keys(DELIVERY_CITIES).map((c) => (
+            {Object.keys(cities).map((c) => (
               <option key={c} value={c}>
                 {c}
-                {DELIVERY_CITIES[c] === 0
+                {cities[c] === 0
                   ? " (gratuit)"
-                  : ` (+${formatPrice(DELIVERY_CITIES[c])})`}
+                  : ` (+${formatPrice(cities[c])})`}
               </option>
             ))}
           </select>

@@ -4,38 +4,41 @@ import { useState } from "react";
 import Link from "next/link";
 import { ShoppingCart, MessageCircle, Minus, Plus } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { formatPrice, CONTACT, INSTALLATION_PRICES } from "@/lib/constants";
+import { formatPrice, CONTACT } from "@/lib/constants";
 import type { Product } from "@/types";
+import type { InstallationOption } from "@/lib/settings";
 
 export function ProductActions({
   product,
   whatsapp = CONTACT.whatsapp,
+  installOptions = [],
 }: {
   product: Product;
   whatsapp?: string;
+  installOptions?: InstallationOption[];
 }) {
   const { addItem, toggleCart } = useCart();
   const [qty, setQty] = useState(1);
   const [withInstall, setWithInstall] = useState(false);
-  const [installType, setInstallType] =
-    useState<keyof typeof INSTALLATION_PRICES>("toiture_simple");
+  const [installIdx, setInstallIdx] = useState(0);
 
   const onRequest = product.price <= 0; // prix défini à la publication
-  const installPrice = withInstall ? (INSTALLATION_PRICES[installType] ?? 0) : 0;
+  const selectedInstall = installOptions[installIdx];
+  const installPrice = withInstall ? (selectedInstall?.price ?? 0) : 0;
   const unitPrice = (product.promoPrice ?? product.price) + (installPrice ?? 0);
 
   const waMessage = encodeURIComponent(
     onRequest
       ? `Bonjour, je suis intéressé par :\n• ${product.name} (Réf. ${product.reference})\nQuel est le prix ?`
       : `Bonjour, je souhaite commander :\n• ${qty}× ${product.name} (${formatPrice(unitPrice)}/u)` +
-          (withInstall
-            ? `\n• Installation : ${installType.replace(/_/g, " ")}`
+          (withInstall && selectedInstall
+            ? `\n• Installation : ${selectedInstall.label}`
             : "")
   );
 
   return (
     <div className="space-y-4">
-      {product.installationAvailable && (
+      {product.installationAvailable && installOptions.length > 0 && (
         <label className="flex items-center gap-3 rounded-lg border p-3 text-sm">
           <input
             type="checkbox"
@@ -52,24 +55,16 @@ export function ProductActions({
 
       {withInstall && (
         <select
-          value={installType}
-          onChange={(e) =>
-            setInstallType(e.target.value as keyof typeof INSTALLATION_PRICES)
-          }
+          value={installIdx}
+          onChange={(e) => setInstallIdx(Number(e.target.value))}
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
         >
-          <option value="toiture_simple">
-            Toiture simple — {formatPrice(INSTALLATION_PRICES.toiture_simple)}
-          </option>
-          <option value="toiture_haute">
-            Toiture haute — {formatPrice(INSTALLATION_PRICES.toiture_haute)}
-          </option>
-          <option value="pose_sur_mat">
-            Pose sur mât — {formatPrice(INSTALLATION_PRICES.pose_sur_mat)}
-          </option>
-          <option value="site_professionnel">
-            Site professionnel — sur devis
-          </option>
+          {installOptions.map((o, i) => (
+            <option key={o.key} value={i}>
+              {o.label} —{" "}
+              {o.price == null ? "sur devis" : formatPrice(o.price)}
+            </option>
+          ))}
         </select>
       )}
 

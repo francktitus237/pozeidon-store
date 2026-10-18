@@ -47,3 +47,7 @@ next-env.d.ts
 
 # fichiers uploades via l'admin (dev local)
 /uploads
+
+# catalogue importé depuis glotelho (images + json + zip)
+/catalog-import/
+catalog-import.zip

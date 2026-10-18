@@ -1,4 +1,6 @@
-// Initialise la base SQLite de dev : crée les tables si absentes + seed démo.
+// Initialise la base SQLite de dev : crée les tables si absentes +
+// catégories et réglages par défaut. Aucun produit démo n'est inséré :
+// le catalogue vient de l'admin / de l'import catalogue.
 // Utilisé par le build Docker (prerender) et en local :
 //   npx tsx scripts/init-dev-db.ts
 
@@ -8,7 +10,6 @@ import { readdirSync } from "fs";
 import path from "path";
 import * as schema from "../lib/db/schema.sqlite";
 import { CATEGORIES } from "../lib/constants";
-import { DEMO_PRODUCTS } from "../features/products/data";
 
 const sqlite = new Database(process.env.DATABASE_URL ?? "dev.db");
 
@@ -149,9 +150,9 @@ sqlite.pragma("foreign_keys = OFF"); // les ids démo ne sont pas toujours cohé
 const db = drizzle(sqlite, { schema });
 
 async function main() {
-  const existing = db.select().from(schema.products).all();
-  if (existing.length > 0) {
-    console.log(`${existing.length} produits déjà en base — seed ignoré.`);
+  const existingCats = db.select().from(schema.categories).all();
+  if (existingCats.length > 0) {
+    console.log("Base déjà initialisée — seed ignoré.");
     return;
   }
   // onConflictDoNothing : le bloc de migration ci-dessus a peut-être déjà
@@ -166,22 +167,6 @@ async function main() {
       }))
     )
     .onConflictDoNothing();
-  await db.insert(schema.products).values(
-    DEMO_PRODUCTS.map((p) => ({
-      id: p.id,
-      slug: p.slug,
-      name: p.name,
-      reference: p.reference,
-      description: p.description,
-      price: p.price,
-      promoPrice: p.promoPrice,
-      stock: p.stock,
-      status: p.status,
-      categoryId: p.categoryId,
-      images: p.images,
-      installationAvailable: p.installationAvailable,
-    }))
-  );
   await db.insert(schema.settings).values({
     key: "announcement",
     value: JSON.stringify({
@@ -191,7 +176,7 @@ async function main() {
       bg: "navy",
     }),
   });
-  console.log(`Seed OK : ${CATEGORIES.length} catégories, ${DEMO_PRODUCTS.length} produits.`);
+  console.log(`Seed OK : ${CATEGORIES.length} catégories (aucun produit démo).`);
 }
 
 main().then(() => process.exit(0)).catch((e) => { console.error(e); process.exit(1); });

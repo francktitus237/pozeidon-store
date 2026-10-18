@@ -9,6 +9,7 @@ import type {
   CookieBanner,
   ContactInfo,
   PaymentConfig,
+  TariffsConfig,
 } from "@/lib/settings";
 
 export async function updateAnnouncement(data: Announcement) {
@@ -101,5 +102,29 @@ export async function updatePaymentConfig(data: PaymentConfig) {
     });
 
   revalidatePath("/commande");
+  revalidatePath("/gestion/reglages");
+}
+
+export async function updateTariffs(data: TariffsConfig) {
+  const session = await auth();
+  if (!session) throw new Error("Non authentifié");
+
+  await db
+    .insert(settings)
+    .values({
+      key: "tariffs",
+      value: JSON.stringify(data),
+      updatedAt: new Date(),
+    })
+    .onConflictDoUpdate({
+      target: settings.key,
+      set: {
+        value: JSON.stringify(data),
+        updatedAt: new Date(),
+      },
+    });
+
+  revalidatePath("/commande");
+  revalidatePath("/panier");
   revalidatePath("/gestion/reglages");
 }

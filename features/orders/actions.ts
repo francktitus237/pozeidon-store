@@ -7,7 +7,7 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { randomUUID } from "crypto";
 import { z } from "zod";
-import { DELIVERY_CITIES } from "@/lib/constants";
+import { getTariffs } from "@/lib/settings";
 import type { OrderStatus, PaymentMethod } from "@/types";
 
 const createOrderSchema = z.object({
@@ -48,7 +48,8 @@ export async function createOrder(input: unknown) {
   const data = parsed.data;
 
   const subtotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
-  const deliveryFee = DELIVERY_CITIES[data.city] ?? 0;
+  const { deliveryCities } = await getTariffs();
+  const deliveryFee = deliveryCities[data.city] ?? 0;
 
   // Code promo : validé côté serveur, remise appliquée sur le sous-total
   let discount = 0;

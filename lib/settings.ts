@@ -247,6 +247,55 @@ export async function getPaymentConfig(): Promise<PaymentConfig> {
   }
 }
 
+// ── Tarifs (éditable dans Réglages) ──
+// Frais de livraison par ville + forfaits d'installation.
+
+export interface InstallationOption {
+  key: string;
+  label: string;
+  price: number | null; // null = sur devis
+}
+
+export interface TariffsConfig {
+  deliveryCities: Record<string, number>;
+  installation: InstallationOption[];
+}
+
+const DEFAULT_TARIFFS: TariffsConfig = {
+  deliveryCities: {
+    Douala: 0,
+    "Yaoundé": 0,
+    Kribi: 3000,
+  },
+  installation: [
+    { key: "toiture_simple", label: "Toiture simple", price: 65000 },
+    { key: "toiture_haute", label: "Toiture haute", price: 85000 },
+    { key: "pose_sur_mat", label: "Pose sur mât", price: 120000 },
+    { key: "site_professionnel", label: "Site professionnel", price: null },
+  ],
+};
+
+export async function getTariffs(): Promise<TariffsConfig> {
+  try {
+    const row = await db.query.settings.findFirst({
+      where: eq(settings.key, "tariffs"),
+    });
+    if (!row) return DEFAULT_TARIFFS;
+    const parsed = JSON.parse(row.value) as Partial<TariffsConfig>;
+    return {
+      deliveryCities:
+        parsed.deliveryCities && typeof parsed.deliveryCities === "object"
+          ? parsed.deliveryCities
+          : DEFAULT_TARIFFS.deliveryCities,
+      installation: Array.isArray(parsed.installation) && parsed.installation.length
+        ? parsed.installation
+        : DEFAULT_TARIFFS.installation,
+    };
+  } catch {
+    return DEFAULT_TARIFFS;
+  }
+}
+
 // ── Comptes administrateurs (éditable dans Réglages) ──
 // Les mots de passe sont stockés hachés (SHA-256 + sel), jamais en clair.
 

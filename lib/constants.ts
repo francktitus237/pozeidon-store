@@ -11,18 +11,8 @@ export const CATEGORIES = [
   { slug: "promotions", name: "Promotions" },
 ] as const;
 
-export const DELIVERY_CITIES: Record<string, number> = {
-  Douala: 0,
-  Yaoundé: 0,
-  Kribi: 3000,
-};
-
-export const INSTALLATION_PRICES = {
-  toiture_simple: 65000,
-  toiture_haute: 85000,
-  pose_sur_mat: 120000,
-  site_professionnel: null, // sur devis
-} as const;
+// Frais de livraison et forfaits d'installation : gérés dans Réglages
+// (table settings, clé "tariffs") — voir lib/settings.ts getTariffs().
 
 export const PAYMENT_METHODS = [
   { id: "mtn_momo", label: "MTN Mobile Money" },
@@ -44,3 +34,6 @@ export function formatPrice(amount: number): string {
 export function priceLabel(amount: number): string {
   return amount > 0 ? formatPrice(amount) : "Prix sur demande";
 }
+
+// Fin affichée par le compteur de la vente flash (+2 jours).
+export const FLASH_SALE_END = Date.now() + 2 * 24 * 3600 * 1000;

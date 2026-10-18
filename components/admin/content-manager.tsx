@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Plus, Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ImageField } from "@/components/admin/image-field";
+import { VideoField } from "@/components/admin/video-field";
 import {
   updateRealisations,
   updateTestimonials,
@@ -280,14 +281,12 @@ export function ContentManager({
         <div className="flex flex-col gap-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium">URL de la vidéo</label>
-              <input
-                className={inputCls}
-                placeholder="https://youtube.com/watch?v=… ou /videos/pub.mp4"
+              <label className="text-xs font-medium">
+                Vidéo (upload .mp4/.webm/.mov ou URL YouTube)
+              </label>
+              <VideoField
                 value={promoVideo.url}
-                onChange={(e) =>
-                  setPromoVideo((v) => ({ ...v, url: e.target.value }))
-                }
+                onChange={(url) => setPromoVideo((v) => ({ ...v, url }))}
               />
             </div>
             <div className="flex flex-col gap-1.5">
