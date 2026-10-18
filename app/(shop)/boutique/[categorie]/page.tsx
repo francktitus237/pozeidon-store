@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ categorie: string }>;
-  searchParams: Promise<{ tri?: string; dispo?: string }>;
+  searchParams: Promise<{ tri?: string; dispo?: string; promo?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -17,6 +17,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cats = await getCategories();
   const cat = cats.find((c) => c.slug === categorie);
   return { title: `${cat?.name ?? "Catégorie"} — Pozeidon Engineering SARL` };
+}
+
+function hasPromo(p: { price: number; promoPrice?: number | null }) {
+  return p.promoPrice != null && p.promoPrice > 0 && p.promoPrice < p.price;
 }
 
 const SORTS = [
@@ -28,7 +32,7 @@ const SORTS = [
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorie } = await params;
-  const { tri = "", dispo = "" } = await searchParams;
+  const { tri = "", dispo = "", promo = "" } = await searchParams;
 
   const [all, categories] = await Promise.all([getProducts(), getCategories()]);
   const category = categories.find((c) => c.slug === categorie);
@@ -40,7 +44,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       ? all.filter((p) => p.promoPrice != null && p.promoPrice > 0)
       : all.filter((p) => p.categoryId === categorie);
 
-  // Filtre disponibilité
+  // Filtres
+  if (promo === "1") items = items.filter(hasPromo);
   if (dispo === "stock") items = items.filter((p) => p.status === "in_stock" && p.stock > 0);
 
   // Tri
@@ -51,8 +56,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   else if (tri === "nom")
     items = [...items].sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
-  const link = (t: string, d: string) =>
-    `/boutique/${categorie}${t || d ? `?${new URLSearchParams({ ...(t ? { tri: t } : {}), ...(d ? { dispo: d } : {}) })}` : ""}`;
+  const hasFilters = tri || dispo || promo;
+
+  const link = (t: string, d: string, pr: string) =>
+    `/boutique/${categorie}${t || d || pr ? `?${new URLSearchParams({ ...(t ? { tri: t } : {}), ...(d ? { dispo: d } : {}), ...(pr ? { promo: pr } : {}) })}` : ""}`;
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -80,7 +87,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           {SORTS.map((s) => (
             <Link
               key={s.key}
-              href={link(s.key, dispo)}
+              href={link(s.key, dispo, promo)}
               className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                 tri === s.key
                   ? "border-navy-900 bg-navy-900 text-white"
@@ -92,17 +99,39 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           ))}
         </div>
 
-        {/* Disponibilité */}
-        <Link
-          href={link(tri, dispo === "stock" ? "" : "stock")}
-          className={`ml-auto rounded-full border px-3 py-1 text-xs font-medium transition ${
-            dispo === "stock"
-              ? "border-stock-in bg-stock-in/10 text-stock-in"
-              : "hover:border-sky-400 hover:text-navy-900"
-          }`}
-        >
-          En stock uniquement
-        </Link>
+        {/* Filtres */}
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Link
+            href={link(tri, dispo === "stock" ? "" : "stock", promo)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              dispo === "stock"
+                ? "border-stock-in bg-stock-in/10 text-stock-in"
+                : "hover:border-sky-400 hover:text-navy-900"
+            }`}
+          >
+            En stock uniquement
+          </Link>
+          {categorie !== "promotions" && (
+            <Link
+              href={link(tri, dispo, promo === "1" ? "" : "1")}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                promo === "1"
+                  ? "border-cta-500 bg-cta-500/10 text-cta-600"
+                  : "hover:border-sky-400 hover:text-navy-900"
+              }`}
+            >
+              Promos
+            </Link>
+          )}
+          {hasFilters && (
+            <Link
+              href={`/boutique/${categorie}`}
+              className="text-xs text-sky-600 underline-offset-2 hover:underline"
+            >
+              Réinitialiser
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Navigation entre catégories */}
@@ -118,9 +147,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             key={c.slug}
             href={`/boutique/${c.slug}`}
             className={`rounded-full px-3 py-1 text-xs transition ${
-              c.slug === categorie
-                ? "bg-navy-900 font-medium text-white"
-                : "bg-sky-50 text-sky-700 hover:bg-sky-100"
+              c.slug === "promotions"
+                ? "bg-cta-500 font-semibold text-white hover:bg-cta-600"
+                : c.slug === categorie
+                  ? "bg-navy-900 font-medium text-white"
+                  : "bg-sky-50 text-sky-700 hover:bg-sky-100"
             }`}
           >
             {c.name}

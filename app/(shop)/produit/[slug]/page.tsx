@@ -4,9 +4,10 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductGallery } from "@/components/shop/product-gallery";
 import { getProductBySlug, getProducts } from "@/features/products/queries";
 import { getContact, getTariffs } from "@/lib/settings";
-import { formatPrice, priceLabel } from "@/lib/constants";
+import { priceLabel } from "@/lib/constants";
 import type { Metadata } from "next";
 
 interface ProductPageProps {
@@ -20,6 +21,10 @@ export async function generateMetadata({
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Produit introuvable" };
   return { title: product.name, description: product.description };
+}
+
+function isNew(createdAt: string, days = 14) {
+  return Date.now() - new Date(createdAt).getTime() < days * 24 * 3600 * 1000;
 }
 
 function youtubeId(url: string): string | null {
@@ -46,11 +51,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
   if (!product) notFound();
 
   const hasPromo =
-    product.promoPrice !== undefined && product.price > 0;
+    product.promoPrice != null &&
+    product.promoPrice > 0 &&
+    product.promoPrice < product.price;
   const discount = hasPromo
     ? Math.round((1 - product.promoPrice! / product.price) * 100)
     : 0;
   const stock = STOCK_LABEL[product.status];
+  const showNew = isNew(product.createdAt) && product.status !== "out_of_stock";
+  const isOut = product.status === "out_of_stock";
   const similar = (await getProducts())
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4);
@@ -66,25 +75,26 @@ export default async function ProductPage({ params }: ProductPageProps) {
       </nav>
 
       <div className="grid gap-8 md:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-xl bg-sky-50">
-          {product.images[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              priority
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center text-sky-600">
-              Photo article
+        <div className="relative">
+          <ProductGallery images={product.images} alt={product.name} />
+          <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-1.5">
+            {hasPromo && (
+              <Badge className="bg-cta-500 text-white hover:bg-cta-500">
+                -{discount}%
+              </Badge>
+            )}
+            {showNew && (
+              <Badge className="bg-navy-900 text-white hover:bg-navy-900">
+                Nouveau
+              </Badge>
+            )}
+          </div>
+          {isOut && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl">
+              <Badge className="bg-destructive text-white hover:bg-destructive">
+                Épuisé
+              </Badge>
             </div>
-          )}
-          {hasPromo && (
-            <Badge className="absolute left-3 top-3 bg-cta-500 text-white hover:bg-cta-500">
-              -{discount}%
-            </Badge>
           )}
         </div>
 
@@ -104,7 +114,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </span>
             {hasPromo && (
               <span className="text-lg text-muted-foreground line-through">
-                {formatPrice(product.price)}
+                {priceLabel(product.price)}
               </span>
             )}
           </div>

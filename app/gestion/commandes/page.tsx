@@ -6,6 +6,9 @@ import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
 import { PaginatedTable } from "@/components/admin/paginated-table";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
+import { Download } from "lucide-react";
 import type { OrderStatus } from "@/types";
 
 const PAYMENT_LABEL: Record<string, string> = {
@@ -23,9 +26,22 @@ export default async function AdminOrdersPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-navy-900">Commandes</h1>
-        <p className="text-sm text-muted-foreground">
-          {rows.length} commande{rows.length > 1 ? "s" : ""}
-        </p>
+        <div className="flex items-center gap-3">
+          <a
+            href="/api/orders/export"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "inline-flex items-center gap-1.5"
+            )}
+            download
+          >
+            <Download className="h-4 w-4" />
+            Exporter CSV
+          </a>
+          <p className="text-sm text-muted-foreground">
+            {rows.length} commande{rows.length > 1 ? "s" : ""}
+          </p>
+        </div>
       </div>
 
       {rows.length === 0 ? (

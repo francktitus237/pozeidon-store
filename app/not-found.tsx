@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import { Home, ShoppingBag, MessageCircle } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 import { SITE_NAME } from "@/lib/constants";
 
 export default function NotFound() {
@@ -16,25 +18,36 @@ export default function NotFound() {
       <div>
         <p className="text-6xl font-bold text-navy-900">404</p>
         <h1 className="mt-2 text-xl font-semibold">Page introuvable</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          La page que vous cherchez n&apos;existe pas ou a été déplacée.
+        <p className="mt-1 max-w-md text-sm text-muted-foreground">
+          La page que vous cherchez n&apos;existe pas ou a été déplacée. Pas de
+          panique, on vous ramène à la boutique.
         </p>
       </div>
-      <div className="flex gap-3">
-        <Button
-          render={<Link href="/" />}
-          nativeButton={false}
-          className="bg-navy-900 text-white hover:bg-navy-700"
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link
+          href="/"
+          className={cn(
+            buttonVariants({ variant: "default" }),
+            "bg-navy-900 text-white hover:bg-navy-700"
+          )}
         >
-          Retour à l&apos;accueil
-        </Button>
-        <Button
-          render={<Link href="/boutique" />}
-          nativeButton={false}
-          variant="outline"
+          <Home className="mr-2 h-4 w-4" />
+          Accueil
+        </Link>
+        <Link
+          href="/boutique"
+          className={cn(buttonVariants({ variant: "outline" }), "border-navy-900/20")}
         >
-          Voir la boutique
-        </Button>
+          <ShoppingBag className="mr-2 h-4 w-4" />
+          Boutique
+        </Link>
+        <Link
+          href="/contact"
+          className={cn(buttonVariants({ variant: "outline" }), "border-navy-900/20")}
+        >
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Contact
+        </Link>
       </div>
     </main>
   );

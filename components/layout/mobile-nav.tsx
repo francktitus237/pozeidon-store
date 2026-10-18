@@ -77,7 +77,9 @@ export function MobileNav({
                 key={c.slug}
                 href={`/boutique/${c.slug}`}
                 onClick={() => setOpen(false)}
-                className="flex items-center justify-between rounded-md px-3 py-2.5 text-sm hover:bg-sky-50 hover:text-navy-900"
+                className={`flex items-center justify-between rounded-md px-3 py-2.5 text-sm hover:bg-sky-50 hover:text-navy-900 ${
+                  c.slug === "promotions" ? "font-semibold text-cta-600" : ""
+                }`}
               >
                 {c.name}
                 <ChevronRight className="h-4 w-4 text-muted-foreground" />

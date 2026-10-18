@@ -11,7 +11,7 @@ export async function Footer() {
   ]);
   return (
     <footer className="mt-16 bg-navy-900 text-sky-100">
-      <div className="container mx-auto grid gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container mx-auto grid gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-5">
         {/* Marque */}
         <div>
           <p className="mb-3 text-lg font-bold text-white">{SITE_NAME}</p>
@@ -46,7 +46,14 @@ export async function Footer() {
           <ul className="grid grid-cols-1 gap-2 text-sm">
             {categories.map((c) => (
               <li key={c.slug}>
-                <Link href={`/boutique/${c.slug}`} className="hover:text-white">
+                <Link
+                  href={`/boutique/${c.slug}`}
+                  className={
+                    c.slug === "promotions"
+                      ? "font-semibold text-cta-500 hover:text-cta-400"
+                      : "hover:text-white"
+                  }
+                >
                   {c.name}
                 </Link>
               </li>
@@ -76,6 +83,33 @@ export async function Footer() {
             <li>
               <Link href="/services" className="hover:text-white">
                 Nos services
+              </Link>
+            </li>
+          </ul>
+        </div>
+
+        {/* Légal */}
+        <div>
+          <p className="mb-3 font-semibold text-white">Légal</p>
+          <ul className="space-y-2 text-sm">
+            <li>
+              <Link href="/mentions-legales" className="hover:text-white">
+                Mentions légales
+              </Link>
+            </li>
+            <li>
+              <Link href="/cgv" className="hover:text-white">
+                Conditions de vente
+              </Link>
+            </li>
+            <li>
+              <Link href="/politique-confidentialite" className="hover:text-white">
+                Confidentialité
+              </Link>
+            </li>
+            <li>
+              <Link href="/livraison-retours" className="hover:text-white">
+                Livraison &amp; retours
               </Link>
             </li>
           </ul>

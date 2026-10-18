@@ -59,13 +59,28 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
  * Fallback sur les catégories par défaut si la table est vide/inaccessible,
  * pour que la boutique fonctionne toujours.
  */
+// Ordre d'affichage : CATEGORIES canonique, les catégories créées en admin
+// se placent avant « Promotions », qui reste toujours en dernier.
+const CAT_ORDER = new Map<string, number>(
+  CATEGORIES.map((c, i) => [c.slug, i] as [string, number])
+);
+function sortCategories<
+  T extends { slug: string; name: string; image?: string | null },
+>(list: T[]): T[] {
+  return [...list].sort((a, b) => {
+    const rank = (slug: string) =>
+      slug === "promotions" ? 9999 : (CAT_ORDER.get(slug) ?? 500);
+    return rank(a.slug) - rank(b.slug);
+  });
+}
+
 export async function getCategories(): Promise<
   { slug: string; name: string; image?: string | null }[]
 > {
   try {
     const rows = await db.select().from(categories);
     if (rows.length === 0) return [...CATEGORIES];
-    return rows;
+    return sortCategories(rows);
   } catch {
     return [...CATEGORIES];
   }

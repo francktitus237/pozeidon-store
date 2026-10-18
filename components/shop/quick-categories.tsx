@@ -17,13 +17,13 @@ const SHORTCUTS = [
     icon: Keyboard,
   },
   { slug: "services", label: "Services", icon: Wrench, href: "/services" },
-  { slug: "promotions", label: "Promos", icon: Tag },
   {
     slug: "boutique",
     label: "Tout",
     icon: LayoutGrid,
     href: "/boutique",
   },
+  { slug: "promotions", label: "Promos", icon: Tag, promo: true },
 ];
 
 export function QuickCategories() {
@@ -35,10 +35,22 @@ export function QuickCategories() {
           href={s.href ?? `/boutique/${s.slug}`}
           className="flex w-20 shrink-0 flex-col items-center gap-2"
         >
-          <span className="flex h-14 w-14 items-center justify-center rounded-full border border-sky-300 bg-sky-50 text-navy-900 transition-colors hover:bg-sky-100">
+          <span
+            className={`flex h-14 w-14 items-center justify-center rounded-full border transition-colors ${
+              "promo" in s && s.promo
+                ? "border-cta-500 bg-cta-500 text-white shadow-md hover:bg-cta-600"
+                : "border-sky-300 bg-sky-50 text-navy-900 hover:bg-sky-100"
+            }`}
+          >
             <s.icon className="h-6 w-6" />
           </span>
-          <span className="text-center text-xs font-medium">{s.label}</span>
+          <span
+            className={`text-center text-xs ${
+              "promo" in s && s.promo ? "font-bold text-cta-600" : "font-medium"
+            }`}
+          >
+            {s.label}
+          </span>
         </Link>
       ))}
     </div>

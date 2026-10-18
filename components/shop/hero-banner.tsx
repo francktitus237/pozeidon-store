@@ -10,7 +10,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 
 const SLIDES = [
   {
@@ -69,13 +70,15 @@ export function HeroBanner() {
               <p className="relative z-10 text-sm text-sky-100 md:text-base">
                 {s.subtitle}
               </p>
-              <Button
-                render={<Link href={s.href} />}
-                nativeButton={false}
-                className="relative z-10 mt-2 bg-cta-500 text-white hover:bg-cta-600"
+              <Link
+                href={s.href}
+                className={cn(
+                  buttonVariants({ variant: "default" }),
+                  "relative z-10 mt-2 bg-cta-500 text-white hover:bg-cta-600"
+                )}
               >
                 {s.cta}
-              </Button>
+              </Link>
             </div>
           </CarouselItem>
         ))}

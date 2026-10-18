@@ -7,7 +7,7 @@ export const metadata = { title: "Boutique — Pozeidon Engineering SARL" };
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ q?: string; tri?: string; dispo?: string }>;
+  searchParams: Promise<{ q?: string; tri?: string; dispo?: string; promo?: string }>;
 }
 
 const SORTS = [
@@ -28,12 +28,17 @@ function matchesQuery(
     .every((word) => haystack.includes(word));
 }
 
+function hasPromo(p: { price: number; promoPrice?: number | null }) {
+  return p.promoPrice != null && p.promoPrice > 0 && p.promoPrice < p.price;
+}
+
 export default async function BoutiquePage({ searchParams }: Props) {
-  const { q, tri = "", dispo = "" } = await searchParams;
+  const { q, tri = "", dispo = "", promo = "" } = await searchParams;
   const query = q?.trim() ?? "";
   const [all, categories] = await Promise.all([getProducts(), getCategories()]);
   let products = query ? all.filter((p) => matchesQuery(p, query)) : [...all];
 
+  if (promo === "1") products = products.filter(hasPromo);
   if (dispo === "stock")
     products = products.filter((p) => p.status === "in_stock" && p.stock > 0);
   if (tri === "prix_asc")
@@ -43,11 +48,14 @@ export default async function BoutiquePage({ searchParams }: Props) {
   else if (tri === "nom")
     products.sort((a, b) => a.name.localeCompare(b.name, "fr"));
 
-  const link = (t: string, d: string) => {
+  const hasFilters = tri || dispo || promo;
+
+  const link = (t: string, d: string, pr: string) => {
     const p = new URLSearchParams();
     if (query) p.set("q", query);
     if (t) p.set("tri", t);
     if (d) p.set("dispo", d);
+    if (pr) p.set("promo", pr);
     const s = p.toString();
     return `/boutique${s ? `?${s}` : ""}`;
   };
@@ -76,14 +84,18 @@ export default async function BoutiquePage({ searchParams }: Props) {
           <Link
             key={c.slug}
             href={`/boutique/${c.slug}`}
-            className="rounded-full bg-sky-50 px-3 py-1 text-xs text-sky-700 transition hover:bg-sky-100"
+            className={`rounded-full px-3 py-1 text-xs transition ${
+              c.slug === "promotions"
+                ? "bg-cta-500 font-semibold text-white hover:bg-cta-600"
+                : "bg-sky-50 text-sky-700 hover:bg-sky-100"
+            }`}
           >
             {c.name}
           </Link>
         ))}
       </div>
 
-      {/* Tri + disponibilité */}
+      {/* Tri + filtres */}
       <div className="mt-4 flex flex-wrap items-center gap-1.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Trier :
@@ -91,7 +103,7 @@ export default async function BoutiquePage({ searchParams }: Props) {
         {SORTS.map((s) => (
           <Link
             key={s.key}
-            href={link(s.key, dispo)}
+            href={link(s.key, dispo, promo)}
             className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
               tri === s.key
                 ? "border-navy-900 bg-navy-900 text-white"
@@ -101,16 +113,37 @@ export default async function BoutiquePage({ searchParams }: Props) {
             {s.label}
           </Link>
         ))}
-        <Link
-          href={link(tri, dispo === "stock" ? "" : "stock")}
-          className={`ml-auto rounded-full border px-3 py-1 text-xs font-medium transition ${
-            dispo === "stock"
-              ? "border-stock-in bg-stock-in/10 text-stock-in"
-              : "hover:border-sky-400 hover:text-navy-900"
-          }`}
-        >
-          En stock uniquement
-        </Link>
+
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <Link
+            href={link(tri, dispo === "stock" ? "" : "stock", promo)}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              dispo === "stock"
+                ? "border-stock-in bg-stock-in/10 text-stock-in"
+                : "hover:border-sky-400 hover:text-navy-900"
+            }`}
+          >
+            En stock uniquement
+          </Link>
+          <Link
+            href={link(tri, dispo, promo === "1" ? "" : "1")}
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+              promo === "1"
+                ? "border-cta-500 bg-cta-500/10 text-cta-600"
+                : "hover:border-sky-400 hover:text-navy-900"
+            }`}
+          >
+            Promos
+          </Link>
+          {hasFilters && (
+            <Link
+              href={query ? `/boutique?q=${encodeURIComponent(query)}` : "/boutique"}
+              className="text-xs text-sky-600 underline-offset-2 hover:underline"
+            >
+              Réinitialiser
+            </Link>
+          )}
+        </div>
       </div>
 
       {products.length === 0 ? (
