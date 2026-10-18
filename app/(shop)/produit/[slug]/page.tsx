@@ -8,6 +8,7 @@ import { ProductGallery } from "@/components/shop/product-gallery";
 import { getProductBySlug, getProducts } from "@/features/products/queries";
 import { getContact, getTariffs } from "@/lib/settings";
 import { priceLabel } from "@/lib/constants";
+import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
 
 interface ProductPageProps {
@@ -20,7 +21,18 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Produit introuvable" };
-  return { title: product.name, description: product.description };
+  const base = getBaseUrl();
+  const image = product.images[0] ? `${base}${product.images[0]}` : `${base}/logo-mark.png`;
+  return {
+    title: product.name,
+    description: product.description ?? `Achetez ${product.name} chez Pozeidon Engineering SARL.`,
+    openGraph: {
+      title: product.name,
+      description: product.description ?? undefined,
+      images: [image],
+    },
+    twitter: { card: "summary_large_image", images: [image] },
+  };
 }
 
 function isNew(createdAt: string, days = 14) {

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, SearchX } from "lucide-react";
 import { getCategories, getProducts } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
+import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorie } = await params;
   const cats = await getCategories();
   const cat = cats.find((c) => c.slug === categorie);
-  return { title: `${cat?.name ?? "Catégorie"} — Pozeidon Engineering SARL` };
+  const title = `${cat?.name ?? "Catégorie"} — Pozeidon Engineering SARL`;
+  const base = getBaseUrl();
+  const image = cat?.image ? `${base}${cat.image}` : `${base}/logo-mark.png`;
+  return {
+    title,
+    description: `Découvrez ${cat?.name ?? "nos produits"} chez Pozeidon Engineering SARL. Livraison et installation au Cameroun.`,
+    openGraph: { type: "website", title, images: [image] },
+    twitter: { card: "summary_large_image", images: [image] },
+  };
 }
 
 function hasPromo(p: { price: number; promoPrice?: number | null }) {

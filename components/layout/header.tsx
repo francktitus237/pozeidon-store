@@ -2,11 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { User } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
-import {
-  getAnnouncement,
-  getAnnouncementBg,
-  getContact,
-} from "@/lib/settings";
+import { getContact } from "@/lib/settings";
 import { WhatsAppButton } from "./whatsapp-button";
 import { MobileNav } from "./mobile-nav";
 import { getCategories } from "@/features/products/queries";
@@ -22,37 +18,13 @@ const NAV_LINKS = [
 ];
 
 export async function Header() {
-  const [announcement, contact, categories] = await Promise.all([
-    getAnnouncement(),
+  const [contact, categories] = await Promise.all([
     getContact(),
     getCategories(),
   ]);
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
-      {/* Barre d'annonce personnalisable */}
-      {announcement.enabled && (
-        <div
-          className={`${getAnnouncementBg(
-            announcement.bg
-          )} overflow-hidden py-1.5 text-xs text-white`}
-        >
-          <div className="animate-marquee flex w-max gap-12 whitespace-nowrap">
-            {[0, 1].map((i) => (
-              <span key={i} aria-hidden={i === 1} className="flex gap-12">
-                {announcement.link ? (
-                  <Link href={announcement.link} className="hover:underline">
-                    {announcement.text}
-                  </Link>
-                ) : (
-                  <span>{announcement.text}</span>
-                )}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Barre principale */}
       <div className="container mx-auto flex h-16 items-center gap-3 px-4">
         <MobileNav categories={categories} />

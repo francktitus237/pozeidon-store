@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, Truck } from "lucide-react";
 import { useCart } from "@/hooks/use-cart";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "cn";
 import { formatPrice } from "@/lib/constants";
 
 export function CartView({ cities }: { cities: Record<string, number> }) {
@@ -27,13 +28,12 @@ export function CartView({ cities }: { cities: Record<string, number> }) {
             Parcourez la boutique pour ajouter des articles.
           </p>
         </div>
-        <Button
-          nativeButton={false}
-          render={<Link href="/boutique" />}
-          className="bg-cta-500 hover:bg-cta-600"
+        <Link
+          href="/boutique"
+          className={cn(buttonVariants({ variant: "default" }), "bg-cta-500 text-white hover:bg-cta-600")}
         >
           Voir la boutique
-        </Button>
+        </Link>
       </div>
     );
   }
@@ -170,14 +170,15 @@ export function CartView({ cities }: { cities: Record<string, number> }) {
           </div>
         </dl>
 
-        <Button
-          nativeButton={false}
-          render={<Link href="/commande" />}
-          className="mt-5 w-full bg-cta-500 hover:bg-cta-600"
-          size="lg"
+        <Link
+          href="/commande"
+          className={cn(
+            buttonVariants({ variant: "default", size: "lg" }),
+            "mt-5 block w-full bg-cta-500 text-center text-white hover:bg-cta-600"
+          )}
         >
           Passer commande
-        </Button>
+        </Link>
         <Link
           href="/boutique"
           className="mt-3 block text-center text-sm text-sky-600 hover:underline"

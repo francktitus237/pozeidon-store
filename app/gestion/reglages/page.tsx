@@ -1,5 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+import { promoCodes } from "@/lib/db/schema";
 import {
   getAnnouncement,
   getCookieBanner,
@@ -12,6 +14,7 @@ import { CookieSettingsForm } from "@/components/admin/cookie-settings-form";
 import { ContactSettingsForm } from "@/components/admin/contact-settings-form";
 import { PaymentSettingsForm } from "@/components/admin/payment-settings-form";
 import { TariffsSettingsForm } from "@/components/admin/tariffs-settings-form";
+import { PromoManager } from "@/components/admin/promo-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +22,14 @@ export default async function AdminSettingsPage() {
   const session = await auth();
   if (!session) redirect("/connexion");
 
-  const [announcement, cookieBanner, contact, payments, tariffs] =
+  const [announcement, cookieBanner, contact, payments, tariffs, promos] =
     await Promise.all([
       getAnnouncement(),
       getCookieBanner(),
       getContact(),
       getPaymentConfig(),
       getTariffs(),
+      db.select().from(promoCodes).orderBy(promoCodes.createdAt),
     ]);
 
   return (
@@ -64,6 +68,17 @@ export default async function AdminSettingsPage() {
           éligibles. Laissez un prix vide pour « sur devis ».
         </p>
         <TariffsSettingsForm config={tariffs} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Codes promo
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Créez des codes de réduction pour les campagnes marketing. Les clients
+          peuvent les utiliser au checkout.
+        </p>
+        <PromoManager rows={promos} />
       </div>
 
       <div className="rounded-lg border bg-card p-6">

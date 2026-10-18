@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { getBaseUrl } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,10 +13,23 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const base = getBaseUrl();
+
 export const metadata: Metadata = {
   title: "Pozeidon Engineering SARL — Accessoires & matériel Starlink au Cameroun",
   description:
     "Boutique d'équipement informatique et d'accessoires Starlink au Cameroun : ordinateurs, câbles, supports, routeurs. Livraison et installation à Douala, Yaoundé et partout au Cameroun.",
+  metadataBase: new URL(base),
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Pozeidon Engineering SARL",
+    images: [`${base}/logo-mark.png`],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: [`${base}/logo-mark.png`],
+  },
 };
 
 export default function RootLayout({
