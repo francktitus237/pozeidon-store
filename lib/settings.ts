@@ -126,9 +126,18 @@ export interface Conseil {
 }
 
 const DEFAULT_CONSEILS: Conseil[] = [
-  { title: "Comment choisir un ordinateur d'occasion fiable ?" },
-  { title: "Starlink ou fibre optique : que choisir au Cameroun ?" },
-  { title: "Bien protéger son réseau WiFi à la maison" },
+  {
+    title: "Comment choisir un ordinateur d'occasion fiable ?",
+    image: "/images/conseil-ordinateur.jpg",
+  },
+  {
+    title: "Starlink ou fibre optique : que choisir au Cameroun ?",
+    image: "/images/conseil-starlink.jpg",
+  },
+  {
+    title: "Bien protéger son réseau WiFi à la maison",
+    image: "/images/conseil-wifi.jpg",
+  },
 ];
 
 async function getJsonList<T>(
