@@ -5,7 +5,7 @@
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 
 function slugify(text: string) {
@@ -61,6 +61,7 @@ export async function createProduct(data: ProductFormData) {
     installationAvailable: data.installationAvailable,
   });
 
+  revalidateTag("products", "max");
   revalidatePath("/gestion/articles");
   revalidatePath("/");
   return { ok: true };
@@ -96,6 +97,7 @@ export async function updateProduct(id: string, data: ProductFormData) {
     })
     .where(eq(products.id, id));
 
+  revalidateTag("products", "max");
   revalidatePath("/gestion/articles");
   revalidatePath("/");
   return { ok: true };
@@ -104,6 +106,7 @@ export async function updateProduct(id: string, data: ProductFormData) {
 export async function deleteProduct(id: string) {
   await requireAuth();
   await db.delete(products).where(eq(products.id, id));
+  revalidateTag("products", "max");
   revalidatePath("/gestion/articles");
   revalidatePath("/");
   return { ok: true };

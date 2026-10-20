@@ -169,7 +169,8 @@ export async function initPostgres() {
     const onDisk = new Set<string>();
     for (const d of scanDirs) {
       try {
-        for (const f of readdirSync(d)) onDisk.add(f);
+        for (const f of readdirSync(/* turbopackIgnore: true */ d))
+          onDisk.add(f);
       } catch {
         // dossier absent — ignoré
       }

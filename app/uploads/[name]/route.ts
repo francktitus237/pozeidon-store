@@ -41,7 +41,9 @@ export async function GET(_req: Request, { params }: Props) {
   ];
   for (const filePath of candidates) {
     try {
-      const data = await readFile(filePath);
+      const data = await readFile(
+        /* turbopackIgnore: true */ filePath
+      );
       const ext = file.split(".").pop()?.toLowerCase() ?? "";
       return new NextResponse(new Uint8Array(data), {
         headers: {

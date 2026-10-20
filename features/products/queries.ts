@@ -1,8 +1,11 @@
 // Requêtes produits côté serveur — la base de données est la seule source.
+// Les résultats sont mis en cache (unstable_cache) pour des navigations
+// instantanées ; les actions admin invalident via revalidateTag().
 
 import { db } from "@/lib/db";
 import { categories, products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import type { Product } from "@/types";
 import { CATEGORIES } from "@/lib/constants";
 
@@ -25,13 +28,21 @@ function toProduct(row: typeof products.$inferSelect): Product {
   };
 }
 
-export async function getProducts(): Promise<Product[]> {
-  try {
-    const rows = await db.select().from(products);
-    return rows.map(toProduct);
-  } catch {
-    return [];
-  }
+const getProductsCached = unstable_cache(
+  async (): Promise<Product[]> => {
+    try {
+      const rows = await db.select().from(products);
+      return rows.map(toProduct);
+    } catch {
+      return [];
+    }
+  },
+  ["products-all"],
+  { tags: ["products"], revalidate: 60 }
+);
+
+export function getProducts(): Promise<Product[]> {
+  return getProductsCached();
 }
 
 export async function getFlashProducts(): Promise<Product[]> {
@@ -41,17 +52,25 @@ export async function getFlashProducts(): Promise<Product[]> {
   return all.filter((p) => p.promoPrice != null).slice(0, 4);
 }
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
-  try {
-    const [row] = await db
-      .select()
-      .from(products)
-      .where(eq(products.slug, slug));
-    if (row) return toProduct(row);
-    return null;
-  } catch {
-    return null;
-  }
+const getProductBySlugCached = unstable_cache(
+  async (slug: string): Promise<Product | null> => {
+    try {
+      const [row] = await db
+        .select()
+        .from(products)
+        .where(eq(products.slug, slug));
+      if (row) return toProduct(row);
+      return null;
+    } catch {
+      return null;
+    }
+  },
+  ["product-by-slug"],
+  { tags: ["products"], revalidate: 60 }
+);
+
+export function getProductBySlug(slug: string): Promise<Product | null> {
+  return getProductBySlugCached(slug);
 }
 
 /**
@@ -74,14 +93,24 @@ function sortCategories<
   });
 }
 
-export async function getCategories(): Promise<
+const getCategoriesCached = unstable_cache(
+  async (): Promise<
+    { slug: string; name: string; image?: string | null }[]
+  > => {
+    try {
+      const rows = await db.select().from(categories);
+      if (rows.length === 0) return [...CATEGORIES];
+      return sortCategories(rows);
+    } catch {
+      return [...CATEGORIES];
+    }
+  },
+  ["categories-all"],
+  { tags: ["categories"], revalidate: 60 }
+);
+
+export function getCategories(): Promise<
   { slug: string; name: string; image?: string | null }[]
 > {
-  try {
-    const rows = await db.select().from(categories);
-    if (rows.length === 0) return [...CATEGORIES];
-    return sortCategories(rows);
-  } catch {
-    return [...CATEGORIES];
-  }
+  return getCategoriesCached();
 }

@@ -6,7 +6,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import type {
   Realisation,
   Testimonial,
@@ -33,6 +33,7 @@ async function upsertSetting(key: string, value: unknown) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/");
   revalidatePath("/gestion/contenu");
 }

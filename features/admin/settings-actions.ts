@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import type {
   Announcement,
   CookieBanner,
@@ -31,6 +31,7 @@ export async function updateAnnouncement(data: Announcement) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/");
   revalidatePath("/gestion/reglages");
 }
@@ -54,6 +55,7 @@ export async function updateCookieBanner(data: CookieBanner) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/");
   revalidatePath("/gestion/reglages");
 }
@@ -77,6 +79,7 @@ export async function updateContact(data: ContactInfo) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/");
   revalidatePath("/contact");
   revalidatePath("/gestion/reglages");
@@ -101,6 +104,7 @@ export async function updatePaymentConfig(data: PaymentConfig) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/commande");
   revalidatePath("/gestion/reglages");
 }
@@ -124,6 +128,7 @@ export async function updateTariffs(data: TariffsConfig) {
       },
     });
 
+  revalidateTag("settings", "max");
   revalidatePath("/commande");
   revalidatePath("/panier");
   revalidatePath("/gestion/reglages");

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { categories, products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 
 const slugify = (s: string) =>
@@ -45,6 +45,7 @@ export async function createCategory(input: unknown) {
     description: parsed.data.description?.trim() || null,
     image: parsed.data.image?.trim() || null,
   });
+  revalidateTag("categories", "max");
   revalidatePath("/gestion/categories");
   revalidatePath("/gestion/articles");
   revalidatePath("/boutique");
@@ -70,6 +71,7 @@ export async function updateCategory(
       image: parsed.data.image?.trim() || null,
     })
     .where(eq(categories.id, id));
+  revalidateTag("categories", "max");
   revalidatePath("/gestion/categories");
   revalidatePath("/boutique");
   return { ok: true };
@@ -89,6 +91,7 @@ export async function deleteCategory(id: string) {
     };
 
   await db.delete(categories).where(eq(categories.id, id));
+  revalidateTag("categories", "max");
   revalidatePath("/gestion/categories");
   revalidatePath("/boutique");
   return { ok: true };

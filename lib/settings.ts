@@ -1,7 +1,25 @@
 import { db } from "@/lib/db";
 import { settings } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { unstable_cache } from "next/cache";
 import { CONTACT } from "@/lib/constants";
+
+// Lecture d'une ligne settings mise en cache — navigations instantanées.
+// Invalidée par revalidateTag("settings") dans les actions admin.
+const getSettingRow = unstable_cache(
+  async (key: string): Promise<string | null> => {
+    try {
+      const row = await db.query.settings.findFirst({
+        where: eq(settings.key, key),
+      });
+      return row?.value ?? null;
+    } catch {
+      return null;
+    }
+  },
+  ["setting-row"],
+  { tags: ["settings"], revalidate: 60 }
+);
 
 export interface Announcement {
   text: string;
@@ -27,12 +45,10 @@ export function getAnnouncementBg(bg?: Announcement["bg"]) {
 }
 
 export async function getAnnouncement(): Promise<Announcement> {
-  const row = await db.query.settings.findFirst({
-    where: eq(settings.key, "announcement"),
-  });
-  if (!row) return DEFAULT_ANNOUNCEMENT;
+  const value = await getSettingRow("announcement");
+  if (!value) return DEFAULT_ANNOUNCEMENT;
   try {
-    const parsed = JSON.parse(row.value) as Partial<Announcement>;
+    const parsed = JSON.parse(value) as Partial<Announcement>;
     return { ...DEFAULT_ANNOUNCEMENT, ...parsed };
   } catch {
     return DEFAULT_ANNOUNCEMENT;
@@ -55,12 +71,10 @@ const DEFAULT_COOKIE_BANNER: CookieBanner = {
 };
 
 export async function getCookieBanner(): Promise<CookieBanner> {
-  const row = await db.query.settings.findFirst({
-    where: eq(settings.key, "cookie_banner"),
-  });
-  if (!row) return DEFAULT_COOKIE_BANNER;
+  const value = await getSettingRow("cookie_banner");
+  if (!value) return DEFAULT_COOKIE_BANNER;
   try {
-    const parsed = JSON.parse(row.value) as Partial<CookieBanner>;
+    const parsed = JSON.parse(value) as Partial<CookieBanner>;
     return { ...DEFAULT_COOKIE_BANNER, ...parsed };
   } catch {
     return DEFAULT_COOKIE_BANNER;
@@ -122,11 +136,9 @@ async function getJsonList<T>(
   defaults: T[]
 ): Promise<T[]> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, key),
-    });
-    if (!row) return defaults;
-    const parsed = JSON.parse(row.value);
+    const value = await getSettingRow(key);
+    if (!value) return defaults;
+    const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? (parsed as T[]) : defaults;
   } catch {
     return defaults;
@@ -163,11 +175,9 @@ const DEFAULT_CONTACT: ContactInfo = {
 
 export async function getContact(): Promise<ContactInfo> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, "contact"),
-    });
-    if (!row) return DEFAULT_CONTACT;
-    const parsed = JSON.parse(row.value) as Partial<ContactInfo>;
+    const value = await getSettingRow("contact");
+    if (!value) return DEFAULT_CONTACT;
+    const parsed = JSON.parse(value) as Partial<ContactInfo>;
     return { ...DEFAULT_CONTACT, ...parsed };
   } catch {
     return DEFAULT_CONTACT;
@@ -190,11 +200,9 @@ const DEFAULT_PROMO_VIDEO: PromoVideo = {
 
 export async function getPromoVideo(): Promise<PromoVideo> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, "promo_video"),
-    });
-    if (!row) return DEFAULT_PROMO_VIDEO;
-    const parsed = JSON.parse(row.value) as Partial<PromoVideo>;
+    const value = await getSettingRow("promo_video");
+    if (!value) return DEFAULT_PROMO_VIDEO;
+    const parsed = JSON.parse(value) as Partial<PromoVideo>;
     return { ...DEFAULT_PROMO_VIDEO, ...parsed };
   } catch {
     return DEFAULT_PROMO_VIDEO;
@@ -236,11 +244,9 @@ const DEFAULT_PAYMENTS: PaymentConfig = {
 
 export async function getPaymentConfig(): Promise<PaymentConfig> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, "payment_config"),
-    });
-    if (!row) return DEFAULT_PAYMENTS;
-    const parsed = JSON.parse(row.value) as Partial<PaymentConfig>;
+    const value = await getSettingRow("payment_config");
+    if (!value) return DEFAULT_PAYMENTS;
+    const parsed = JSON.parse(value) as Partial<PaymentConfig>;
     return { ...DEFAULT_PAYMENTS, ...parsed };
   } catch {
     return DEFAULT_PAYMENTS;
@@ -277,11 +283,9 @@ const DEFAULT_TARIFFS: TariffsConfig = {
 
 export async function getTariffs(): Promise<TariffsConfig> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, "tariffs"),
-    });
-    if (!row) return DEFAULT_TARIFFS;
-    const parsed = JSON.parse(row.value) as Partial<TariffsConfig>;
+    const value = await getSettingRow("tariffs");
+    if (!value) return DEFAULT_TARIFFS;
+    const parsed = JSON.parse(value) as Partial<TariffsConfig>;
     return {
       deliveryCities:
         parsed.deliveryCities && typeof parsed.deliveryCities === "object"
@@ -308,11 +312,9 @@ export interface AdminUser {
 
 export async function readAdminUsers(): Promise<AdminUser[]> {
   try {
-    const row = await db.query.settings.findFirst({
-      where: eq(settings.key, "admin_users"),
-    });
-    if (!row) return [];
-    const parsed = JSON.parse(row.value);
+    const value = await getSettingRow("admin_users");
+    if (!value) return [];
+    const parsed = JSON.parse(value);
     return Array.isArray(parsed) ? (parsed as AdminUser[]) : [];
   } catch {
     return [];

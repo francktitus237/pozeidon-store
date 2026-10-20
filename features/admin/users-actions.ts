@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { hashPassword } from "@/lib/admin-auth";
@@ -43,6 +43,7 @@ export async function createAdminUser(input: unknown) {
       createdAt: new Date().toISOString(),
     },
   ]);
+  revalidateTag("settings", "max");
   revalidatePath("/gestion/comptes");
   return { ok: true };
 }
@@ -61,6 +62,7 @@ export async function deleteAdminUser(id: string) {
     return { error: "Vous ne pouvez pas supprimer votre propre compte." };
 
   await saveAdminUsers(users.filter((u) => u.id !== id));
+  revalidateTag("settings", "max");
   revalidatePath("/gestion/comptes");
   return { ok: true };
 }

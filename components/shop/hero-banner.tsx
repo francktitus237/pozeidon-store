@@ -19,28 +19,28 @@ const SLIDES = [
     subtitle: "Unités centrales, desktop complets — contrôle qualité garanti",
     cta: "Voir les ordinateurs",
     href: "/boutique/ordinateurs-neufs",
-    image: "/images/kit-starlink.jpg",
+    image: "/images/hero-ordinateurs.jpg",
   },
   {
     title: "Maintenance & installation",
     subtitle: "Logiciels, systèmes et caméras de surveillance — devis gratuit",
     cta: "Demander un devis",
     href: "/services",
-    image: "/images/antenne-starlink.jpg",
+    image: "/images/hero-maintenance.jpg",
   },
   {
     title: "Accessoires Starlink",
     subtitle: "Chargeurs, câbles, supports et routeurs V4 & Mini",
     cta: "Voir les accessoires",
     href: "/boutique/accessoires-starlink",
-    image: "/images/cable.jpg",
+    image: "/images/antenne-starlink.jpg",
   },
   {
     title: "Accessoires informatiques",
     subtitle: "Répéteurs WiFi, écrans, batteries, claviers, chargeurs",
     cta: "Voir le catalogue",
     href: "/boutique/accessoires-informatique",
-    image: "/images/repetiteur.svg",
+    image: "/images/hero-accessoires.jpg",
   },
 ];
 
