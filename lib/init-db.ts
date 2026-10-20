@@ -104,6 +104,14 @@ export async function initPostgres() {
         used_count INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMP NOT NULL DEFAULT now()
       )`;
+    // Fichiers uploadés stockés en base (base64) : persiste sans volume Docker
+    await sql`
+      CREATE TABLE IF NOT EXISTS files (
+        id TEXT PRIMARY KEY,
+        mime TEXT NOT NULL,
+        data TEXT NOT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+      )`;
     // Colonnes ajoutées après la première version (bases existantes)
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0`;
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT`;
@@ -177,10 +185,22 @@ export async function initPostgres() {
         // dossier absent — ignoré
       }
     }
+    // Uploads stockés en base (table files) : présents même sans volume
+    const inDb = new Set<string>();
+    try {
+      const fileRows = await sql`SELECT id FROM files`;
+      for (const r of fileRows) inDb.add(r.id as string);
+    } catch {
+      // table pas encore créée — ignoré
+    }
     const alive = (src: unknown): src is string => {
       if (typeof src !== "string") return false;
       if (src.startsWith("http")) return true; // Cloudinary & co
-      if (src.startsWith("/uploads/") || src.startsWith("/images/"))
+      if (src.startsWith("/uploads/")) {
+        const name = src.split("/").pop() ?? "";
+        return inDb.has(name) || onDisk.has(name);
+      }
+      if (src.startsWith("/images/"))
         return onDisk.has(src.split("/").pop() ?? "");
       return true; // autre asset statique de public/
     };

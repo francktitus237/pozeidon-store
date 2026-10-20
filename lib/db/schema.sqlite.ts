@@ -72,6 +72,15 @@ export const orders = sqliteTable("orders", {
     .$defaultFn(() => new Date()),
 });
 
+export const files = sqliteTable("files", {
+  id: text("id").primaryKey(),
+  mime: text("mime").notNull(),
+  data: text("data").notNull(), // base64 — persiste sans volume Docker
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export const settings = sqliteTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

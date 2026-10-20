@@ -74,6 +74,15 @@ export const orders = pgTable("orders", {
     .defaultNow(),
 });
 
+export const files = pgTable("files", {
+  id: text("id").primaryKey(),
+  mime: text("mime").notNull(),
+  data: text("data").notNull(), // base64 — persiste sans volume Docker
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
+});
+
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),

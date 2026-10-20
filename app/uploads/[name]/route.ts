@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { readFile } from "fs/promises";
 import path from "path";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { files } from "@/lib/db/schema";
 
-// Sert les fichiers uploadés via /api/upload depuis le dossier uploads/
-// (public/ est figé au moment du build en mode standalone — les uploads
-// runtime n'y sont jamais servis, d'où ce handler dédié)
+// Sert les fichiers uploadés via /api/upload.
+// Source principale : table `files` en base (persiste sans volume Docker).
+// Secours : disque uploads/ puis public/images (fichiers écrits avant la
+// migration en base, ou stockés là manuellement).
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
 
 const MIME: Record<string, string> = {
@@ -33,7 +37,27 @@ export async function GET(_req: Request, { params }: Props) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  // D'abord uploads/, puis public/images en secours
+  // Source principale : table files (uploads stockés en base64)
+  try {
+    const rows = await db
+      .select({ mime: files.mime, data: files.data })
+      .from(files)
+      .where(eq(files.id, file))
+      .limit(1);
+    const row = rows[0];
+    if (row) {
+      return new NextResponse(Buffer.from(row.data, "base64"), {
+        headers: {
+          "Content-Type": row.mime,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  } catch {
+    // table absente ou DB indisponible — on tente le disque
+  }
+
+  // Secours : uploads/ sur disque, puis public/images
   // (fichiers écrits là avant la migration /uploads)
   const candidates = [
     path.join(UPLOAD_DIR, file),

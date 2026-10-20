@@ -83,6 +83,12 @@ sqlite.exec(`
     used_count INTEGER NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+  CREATE TABLE IF NOT EXISTS files (
+    id TEXT PRIMARY KEY,
+    mime TEXT NOT NULL,
+    data TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
 `);
 
 // Ajout des colonnes apparues après la première version (bases existantes)
@@ -121,10 +127,20 @@ sqlite.exec(`
       for (const f of readdirSync(d)) onDisk.add(f);
     } catch {}
   }
+  // Uploads stockés en base (table files) : présents même sans volume
+  const inDb = new Set<string>();
+  try {
+    const fileRows = sqlite.prepare("SELECT id FROM files").all() as { id: string }[];
+    for (const r of fileRows) inDb.add(r.id);
+  } catch {}
   const alive = (src: unknown): boolean => {
     if (typeof src !== "string") return false;
     if (src.startsWith("http")) return true;
-    if (src.startsWith("/uploads/") || src.startsWith("/images/"))
+    if (src.startsWith("/uploads/")) {
+      const name = src.split("/").pop() ?? "";
+      return inDb.has(name) || onDisk.has(name);
+    }
+    if (src.startsWith("/images/"))
       return onDisk.has(src.split("/").pop() ?? "");
     return true;
   };

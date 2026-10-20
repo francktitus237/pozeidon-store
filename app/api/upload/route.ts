@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { files } from "@/lib/db/schema";
 
 // POST /api/upload — upload d'images et de vidéos
 // Prod : Cloudinary si CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET sont définies
-// Dev  : disque local dans uploads/ (servi par app/uploads/[name]/route.ts)
+// Sinon : table `files` en base (base64) — persiste sans volume Docker
 const HAS_CLOUDINARY = !!(
   process.env.CLOUDINARY_CLOUD_NAME &&
   process.env.CLOUDINARY_API_KEY &&
@@ -69,16 +69,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ path: result.secure_url });
     }
 
-    // Fallback disque : dossier uploads/ servi par app/uploads/[name]/route.ts.
-    // (public/ est figé au build en standalone — les fichiers écrits après
-    // le démarrage n'y seraient jamais servis.)
+    // Fallback : stockage en base (table files, base64) — les images
+    // survivent aux redéploiements sans volume Docker ni Cloudinary.
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
     const safeName = `${crypto.randomUUID()}.${ext}`;
-    const dir = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "uploads");
-    await mkdir(dir, { recursive: true });
-    const filePath = path.join(dir, safeName);
-    await writeFile(filePath, buffer);
-    console.log("[upload] saved", filePath, "size", buffer.length);
+    await db.insert(files).values({
+      id: safeName,
+      mime: file.type,
+      data: buffer.toString("base64"),
+    });
+    console.log("[upload] saved in db", safeName, "size", buffer.length);
     return NextResponse.json({ path: `/uploads/${safeName}` });
   } catch (error) {
     console.error("[upload] error", error);
