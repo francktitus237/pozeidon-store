@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { getCategories, getProducts } from "@/features/products/queries";
+import {
+  getProducts,
+  getVisibleCategories,
+} from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
 import { SearchX } from "lucide-react";
 
@@ -35,7 +38,10 @@ function hasPromo(p: { price: number; promoPrice?: number | null }) {
 export default async function BoutiquePage({ searchParams }: Props) {
   const { q, tri = "", dispo = "", promo = "" } = await searchParams;
   const query = q?.trim() ?? "";
-  const [all, categories] = await Promise.all([getProducts(), getCategories()]);
+  const [all, categories] = await Promise.all([
+    getProducts(),
+    getVisibleCategories(),
+  ]);
   let products = query ? all.filter((p) => matchesQuery(p, query)) : [...all];
 
   if (promo === "1") products = products.filter(hasPromo);

@@ -21,7 +21,7 @@ export function AnnouncementBanner({ announcement, bgClass }: Props) {
 
   useEffect(() => {
     const key = `announcement-dismissed-${announcement.text}`;
-    if (localStorage.getItem(key) === "1") setDismissed(true);
+    if (sessionStorage.getItem(key) === "1") setDismissed(true);
   }, [announcement.text]);
 
   if (!announcement.enabled || dismissed) return null;
@@ -37,21 +37,32 @@ export function AnnouncementBanner({ announcement, bgClass }: Props) {
     <span>{announcement.text}</span>
   );
 
+  // Le texte est répété plusieurs fois pour que la piste du marquee
+  // soit toujours plus large que l'écran (sinon le défilement -50%
+  // n'a rien à faire défiler et la bannière paraît figée).
+  const copies = Array.from({ length: 4 }, (_, i) => i);
+
   return (
     <div
       className={`relative overflow-hidden py-2 text-xs text-white ${bgClass}`}
     >
-      <div className="animate-marquee flex w-max gap-12 whitespace-nowrap pr-12">
-        {[0, 1].map((i) => (
-          <span key={i} aria-hidden={i === 1} className="flex gap-12">
-            {text}
+      <div className="animate-marquee flex w-max whitespace-nowrap">
+        {[0, 1].map((half) => (
+          <span
+            key={half}
+            aria-hidden={half === 1}
+            className="flex shrink-0 gap-12 pr-12"
+          >
+            {copies.map((i) => (
+              <span key={i}>{text}</span>
+            ))}
           </span>
         ))}
       </div>
       <button
         type="button"
         onClick={() => {
-          localStorage.setItem(
+          sessionStorage.setItem(
             `announcement-dismissed-${announcement.text}`,
             "1"
           );

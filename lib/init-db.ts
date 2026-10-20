@@ -115,12 +115,19 @@ export async function initPostgres() {
 
     const { CATEGORIES } = await import("./constants");
 
-    // Upsert des catégories
-    for (const c of CATEGORIES) {
-      await sql`
-        INSERT INTO categories (id, slug, name)
-        VALUES (${c.slug}, ${c.slug}, ${c.name})
-        ON CONFLICT (slug) DO UPDATE SET name = EXCLUDED.name`;
+    // Seed des catégories UNIQUEMENT si la table est vide.
+    // Avant, un upsert à chaque démarrage écrasait les renommages faits
+    // dans l'admin et les catégories par défaut réapparaissaient après
+    // chaque redéploiement.
+    const [{ n: catCount }] =
+      await sql`SELECT COUNT(*)::int AS n FROM categories`;
+    if (catCount === 0) {
+      for (const c of CATEGORIES) {
+        await sql`
+          INSERT INTO categories (id, slug, name)
+          VALUES (${c.slug}, ${c.slug}, ${c.name})
+          ON CONFLICT (slug) DO NOTHING`;
+      }
     }
 
     // Migration : l'ancienne catégorie "ordinateurs" est scindée en
@@ -137,14 +144,9 @@ export async function initPostgres() {
     await sql`
       DELETE FROM products WHERE id = ANY(${LEGACY_IDS})`;
 
-    // Supprime les catégories obsolètes non référencées
-    const keepSlugs = CATEGORIES.map((c) => c.slug);
-    await sql`
-      DELETE FROM categories c
-      WHERE NOT (c.slug = ANY(${keepSlugs}))
-        AND NOT EXISTS (
-          SELECT 1 FROM products p WHERE p.category_id = c.id
-        )`;
+    // Les catégories obsolètes ne sont plus supprimées au démarrage :
+    // elles se gèrent dans l'admin (/gestion/categories). Le DELETE
+    // précédent effaçait les catégories admin encore sans produit.
 
     // Purge des produits démo (ids ord-*/stl-*/inf-*/srv-*) : la boutique
     // ne contient plus que les articles publiés depuis l'admin.

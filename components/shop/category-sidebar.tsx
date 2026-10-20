@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { getCategories } from "@/features/products/queries";
+import { getVisibleCategories } from "@/features/products/queries";
 
 export async function CategorySidebar() {
-  const categories = await getCategories();
+  const categories = await getVisibleCategories();
   return (
     <nav
       aria-label="Catégories"

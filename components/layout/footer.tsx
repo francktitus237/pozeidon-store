@@ -3,12 +3,12 @@ import Image from "next/image";
 import { MapPin, MessageCircle, Phone, Clock, CreditCard } from "lucide-react";
 import { PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
 import { getContact } from "@/lib/settings";
-import { getCategories } from "@/features/products/queries";
+import { getVisibleCategories } from "@/features/products/queries";
 
 export async function Footer() {
   const [contact, categories] = await Promise.all([
     getContact(),
-    getCategories(),
+    getVisibleCategories(),
   ]);
   const tel = contact.whatsapp.replace(/\s/g, "");
 

@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, SearchX } from "lucide-react";
-import { getCategories, getProducts } from "@/features/products/queries";
+import {
+  getCategories,
+  getProducts,
+  getVisibleCategories,
+} from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
 import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
@@ -43,8 +47,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorie } = await params;
   const { tri = "", dispo = "", promo = "" } = await searchParams;
 
-  const [all, categories] = await Promise.all([getProducts(), getCategories()]);
-  const category = categories.find((c) => c.slug === categorie);
+  const [all, allCats, navCats] = await Promise.all([
+    getProducts(),
+    getCategories(),
+    getVisibleCategories(),
+  ]);
+  const category = allCats.find((c) => c.slug === categorie);
   if (!category) notFound();
   // "promotions" n'est pas une vraie catégorie : elle regroupe les produits
   // qui ont un prix promo, quelle que soit leur catégorie d'origine.
@@ -151,7 +159,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         >
           Tout
         </Link>
-        {categories.map((c) => (
+        {navCats.map((c) => (
           <Link
             key={c.slug}
             href={`/boutique/${c.slug}`}

@@ -114,3 +114,23 @@ export function getCategories(): Promise<
 > {
   return getCategoriesCached();
 }
+
+/**
+ * Catégories affichées dans la navigation boutique : uniquement celles
+ * qui contiennent au moins un article. "promotions" est une catégorie
+ * virtuelle (regroupe les promos de toutes les catégories) : elle
+ * n'apparaît que s'il existe au moins un prix promo.
+ * Réutilise les caches produits/catégories — aucune requête en plus.
+ */
+export async function getVisibleCategories(): Promise<
+  { slug: string; name: string; image?: string | null }[]
+> {
+  const [cats, prods] = await Promise.all([getCategories(), getProducts()]);
+  const used = new Set(prods.map((p) => p.categoryId));
+  const hasPromo = prods.some(
+    (p) => p.promoPrice != null && p.promoPrice > 0 && p.promoPrice < p.price
+  );
+  return cats.filter(
+    (c) => used.has(c.slug) || (c.slug === "promotions" && hasPromo)
+  );
+}

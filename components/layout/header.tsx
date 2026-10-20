@@ -5,7 +5,7 @@ import { SITE_NAME } from "@/lib/constants";
 import { getContact } from "@/lib/settings";
 import { WhatsAppButton } from "./whatsapp-button";
 import { MobileNav } from "./mobile-nav";
-import { getCategories } from "@/features/products/queries";
+import { getVisibleCategories } from "@/features/products/queries";
 import { CartButton } from "./cart-button";
 import { SearchBar } from "./search-bar";
 
@@ -20,7 +20,7 @@ const NAV_LINKS = [
 export async function Header() {
   const [contact, categories] = await Promise.all([
     getContact(),
-    getCategories(),
+    getVisibleCategories(),
   ]);
 
   return (
