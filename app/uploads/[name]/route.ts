@@ -60,8 +60,8 @@ export async function GET(_req: Request, { params }: Props) {
   // Secours : uploads/ sur disque, puis public/images
   // (fichiers écrits là avant la migration /uploads)
   const candidates = [
-    path.join(UPLOAD_DIR, file),
-    path.join(process.cwd(), "public", "images", file),
+    /* turbopackIgnore: true */ path.join(UPLOAD_DIR, file),
+    /* turbopackIgnore: true */ path.join(process.cwd(), "public", "images", file),
   ];
   for (const filePath of candidates) {
     try {
