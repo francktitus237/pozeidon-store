@@ -168,6 +168,21 @@ export async function initPostgres() {
     await sql`
       DELETE FROM products WHERE id = ANY(${DEMO_IDS})`;
 
+    // Seed du catalogue : les images de public/images/products/ sont copiées
+    // dans la table files (base64) puis les produits sont insérés si absents.
+    // Placé AVANT le nettoyage pour que les /uploads/ soient reconnus vivants.
+    try {
+      const { seedCatalog } = await import("./seed-runner");
+      const seeded = await seedCatalog();
+      if (seeded.inserted > 0 || seeded.images > 0) {
+        console.log(
+          `[db] Catalogue seedé : ${seeded.inserted} produits, ${seeded.images} images en base.`
+        );
+      }
+    } catch (e) {
+      console.warn("[db] Seed catalogue ignoré :", e);
+    }
+
     // Nettoyage des références d'images mortes : les fichiers uploadés
     // avant le passage à uploads/ (ou sans volume) sont perdus au rebuild.
     // On retire des produits/catégories les chemins locaux dont le fichier
