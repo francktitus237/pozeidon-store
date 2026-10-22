@@ -10,7 +10,9 @@ import {
   Search,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
+import { VideoField } from "./video-field";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,19 +78,22 @@ export function ProductManager({
   const [editing, setEditing] = useState<Row | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState<Row | null>(null);
-  const [imagePath, setImagePath] = useState("");
+  const [imagePaths, setImagePaths] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [pending, startTransition] = useTransition();
 
   function openCreate() {
     setEditing(null);
-    setImagePath("");
+    setImagePaths([]);
+    setVideoUrl("");
     setShowForm(true);
   }
 
   function openEdit(row: Row) {
     setEditing(row);
-    setImagePath((row.images as string[] | null)?.[0] ?? "");
+    setImagePaths((row.images as string[] | null) ?? []);
+    setVideoUrl(row.videoUrl ?? "");
     setShowForm(true);
   }
 
@@ -100,7 +105,7 @@ export function ProductManager({
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const json = (await res.json()) as { path?: string; error?: string };
       if (!res.ok || !json.path) throw new Error(json.error ?? "Échec");
-      setImagePath(json.path);
+      setImagePaths((prev) => [...prev, json.path!]);
       toast.add({ title: "Image téléversée", type: "success" });
     } catch (err) {
       toast.add({
@@ -139,8 +144,8 @@ export function ProductManager({
       stock: Number(f.get("stock")),
       status: String(f.get("status")),
       categoryId: String(f.get("categoryId")),
-      image: imagePath,
-      videoUrl: String(f.get("videoUrl") || ""),
+      images: imagePaths,
+      videoUrl,
       installationAvailable: f.get("installationAvailable") === "on",
     };
     startTransition(async () => {
@@ -269,34 +274,63 @@ export function ProductManager({
                 defaultValue={editing?.stock ?? 0}
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-medium">Image</label>
-              <div className="flex items-center gap-3">
-                {imagePath ? (
-                  <Image
-                    src={imagePath}
-                    alt="Aperçu"
-                    width={48}
-                    height={48}
-                    className="h-12 w-12 rounded-md object-cover"
-                  />
-                ) : (
-                  <div className="h-12 w-12 rounded-md bg-sky-100" />
-                )}
-                <label className="flex cursor-pointer items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-sky-50">
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <label className="text-sm font-medium">
+                Photos — la 1ère est l'image principale
+              </label>
+              <div className="flex flex-wrap items-center gap-3">
+                {imagePaths.map((src, i) => (
+                  <div key={src} className="group relative">
+                    <Image
+                      src={src}
+                      alt={`Vue ${i + 1}`}
+                      width={56}
+                      height={56}
+                      className={`h-14 w-14 rounded-md object-cover ${
+                        i === 0 ? "ring-2 ring-cta-500" : ""
+                      }`}
+                    />
+                    {i === 0 && (
+                      <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-cta-500 px-1 text-[9px] font-medium text-white">
+                        Principale
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setImagePaths((prev) =>
+                          prev.filter((_, idx) => idx !== i)
+                        )
+                      }
+                      aria-label={`Retirer la vue ${i + 1}`}
+                      className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex h-14 w-14 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-dashed text-xs text-muted-foreground hover:bg-sky-50">
                   <Upload className="h-4 w-4" />
-                  {uploading ? "Envoi…" : "Choisir un fichier"}
+                  {uploading ? "Envoi…" : "Ajouter"}
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void uploadImage(file);
+                      const files = Array.from(e.target.files ?? []);
+                      for (const file of files) void uploadImage(file);
+                      e.target.value = "";
                     }}
                   />
                 </label>
               </div>
+              {imagePaths.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {imagePaths.length} photo{imagePaths.length > 1 ? "s" : ""} —
+                  survolez une miniature pour la retirer.
+                </p>
+              )}
             </div>
           </div>
 
@@ -312,16 +346,12 @@ export function ProductManager({
 
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium">
-              Vidéo (URL YouTube ou fichier .mp4) — optionnel
+              Vidéo — optionnel
             </label>
-            <Input
-              name="videoUrl"
-              type="url"
-              defaultValue={editing?.videoUrl ?? ""}
-              placeholder="https://youtube.com/watch?v=… ou /videos/demo.mp4"
-            />
+            <VideoField value={videoUrl} onChange={setVideoUrl} />
             <p className="text-xs text-muted-foreground">
-              La vidéo est affichée sur la fiche produit (démonstration, pub).
+              Uploadez un .mp4/.webm/.mov (stocké en base) ou collez une URL
+              YouTube. Affichée sur la fiche produit.
             </p>
           </div>
 

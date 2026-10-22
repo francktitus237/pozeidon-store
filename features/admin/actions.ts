@@ -31,7 +31,7 @@ export interface ProductFormData {
   stock: number;
   status: string;
   categoryId: string;
-  image: string;
+  images: string[];
   videoUrl?: string;
   installationAvailable: boolean;
 }
@@ -56,7 +56,7 @@ export async function createProduct(data: ProductFormData) {
     stock: data.stock,
     status: data.status,
     categoryId: data.categoryId,
-    images: [...new Set([data.image].filter(Boolean))],
+    images: [...new Set((data.images ?? []).filter(Boolean))],
     videoUrl: data.videoUrl || null,
     installationAvailable: data.installationAvailable,
   });
@@ -91,7 +91,7 @@ export async function updateProduct(id: string, data: ProductFormData) {
       stock: data.stock,
       status: data.status,
       categoryId: data.categoryId,
-      images: [...new Set([data.image].filter(Boolean))],
+      images: [...new Set((data.images ?? []).filter(Boolean))],
       videoUrl: data.videoUrl || null,
       installationAvailable: data.installationAvailable,
     })

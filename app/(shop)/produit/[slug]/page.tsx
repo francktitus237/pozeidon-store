@@ -155,6 +155,32 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </div>
       </div>
 
+      {product.videoUrl && (
+        <section className="mt-10">
+          <h2 className="mb-3 text-xl font-bold text-navy-900">
+            Vidéo du produit
+          </h2>
+          {youtubeId(product.videoUrl) ? (
+            <div className="aspect-video w-full overflow-hidden rounded-xl md:max-w-3xl">
+              <iframe
+                src={`https://www.youtube.com/embed/${youtubeId(product.videoUrl)}`}
+                title={`Vidéo — ${product.name}`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="h-full w-full"
+              />
+            </div>
+          ) : (
+            <video
+              src={product.videoUrl}
+              controls
+              preload="metadata"
+              className="aspect-video w-full rounded-xl bg-black md:max-w-3xl"
+            />
+          )}
+        </section>
+      )}
+
       {similar.length > 0 && (
         <section className="mt-14">
           <h2 className="mb-4 text-xl font-bold text-navy-900">
