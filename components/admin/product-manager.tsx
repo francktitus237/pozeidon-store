@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Star,
 } from "lucide-react";
 import { VideoField } from "./video-field";
 import { Badge } from "@/components/ui/badge";
@@ -294,6 +295,24 @@ export function ProductManager({
                       <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded bg-cta-500 px-1 text-[9px] font-medium text-white">
                         Principale
                       </span>
+                    )}
+                    {i > 0 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setImagePaths((prev) => {
+                            const arr = [...prev];
+                            const [item] = arr.splice(i, 1);
+                            arr.unshift(item);
+                            return arr;
+                          })
+                        }
+                        aria-label={`Définir la vue ${i + 1} comme principale`}
+                        title="Définir comme photo principale"
+                        className="absolute -left-1.5 -top-1.5 rounded-full bg-cta-500 p-0.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        <Star className="h-3 w-3" />
+                      </button>
                     )}
                     <button
                       type="button"
