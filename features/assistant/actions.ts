@@ -1,7 +1,11 @@
 "use server";
 
 import { getAiConfig, getContact, getTariffs } from "@/lib/settings";
-import { getCategories, getProducts } from "@/features/products/queries";
+import {
+  getBestSellers,
+  getCategories,
+  getProducts,
+} from "@/features/products/queries";
 import { formatPrice, SITE_NAME } from "@/lib/constants";
 
 // Assistant virtuel côté client — la clé Gemini reste sur le serveur.
@@ -30,23 +34,33 @@ export async function askAssistant(message: string, history: ChatTurn[]) {
   const text = message.trim().slice(0, MAX_MSG);
   if (!text) return { error: "Message vide." };
 
-  const [products, categories, contact, tariffs] = await Promise.all([
-    getProducts(),
-    getCategories(),
-    getContact(),
-    getTariffs(),
-  ]);
+  const [products, categories, contact, tariffs, bestSellers] =
+    await Promise.all([
+      getProducts(),
+      getCategories(),
+      getContact(),
+      getTariffs(),
+      getBestSellers(5),
+    ]);
 
   const catName = new Map(categories.map((c) => [c.slug, c.name]));
-  const catalog = products
-    .slice(0, MAX_PRODUCTS)
-    .map(
-      (p) =>
-        `- ${p.name} | ${formatPrice(p.promoPrice ?? p.price)} | ` +
-        `${STATUS[p.status] ?? p.status} | ${catName.get(p.categoryId) ?? p.categoryId} | ` +
-        `lien: /produit/${p.slug}`
+  const line = (p: (typeof products)[number]) =>
+    `- ${p.name} | ${formatPrice(p.promoPrice ?? p.price)} | ` +
+    `${STATUS[p.status] ?? p.status} | qté ${p.stock} | ` +
+    `${catName.get(p.categoryId) ?? p.categoryId} | lien: /produit/${p.slug}`;
+
+  const catalog = products.slice(0, MAX_PRODUCTS).map(line).join("\n");
+
+  // Nouveautés : articles ajoutés ces 30 derniers jours.
+  const since = Date.now() - 30 * 24 * 3600 * 1000;
+  const fresh = products
+    .filter((p) => new Date(p.createdAt).getTime() > since)
+    .sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
-    .join("\n");
+    .slice(0, 8);
+  const nouveautes = fresh.map(line).join("\n");
+  const best = bestSellers.map(line).join("\n");
 
   const cities =
     Object.keys(tariffs.deliveryCities).join(", ") || "Douala, Yaoundé";
@@ -61,6 +75,9 @@ export async function askAssistant(message: string, history: ChatTurn[]) {
     `- Prix : cite UNIQUEMENT les prix exacts du catalogue, jamais d'invention.\n` +
     `- Paiement : uniquement à la livraison.\n` +
     `- Livraison : ${cities} (frais selon la ville).\n` +
+    `- Boutique : ${contact.address} — horaires : ${contact.hours}.\n` +
+    `- Stock : la quantité exacte de chaque article est indiquée (« qté ») ; ` +
+    `tu peux la donner au client et signaler quand il en reste peu.\n` +
     `- Suivi de commande : page « Espace client » du site, avec le numéro ` +
     `PZE-… et le téléphone ; un lien « Numéro oublié ? » existe aussi.\n` +
     `- Installation Starlink : formulaire sur la page Installation.\n` +
@@ -68,6 +85,8 @@ export async function askAssistant(message: string, history: ChatTurn[]) {
     `- Hors sujet ou demande complexe → inviter à écrire sur WhatsApp ` +
     `(${contact.whatsapp}).\n` +
     `- Pas d'emojis, pas de titres markdown.\n` +
+    `NOUVEAUTÉS (30 derniers jours) :\n${nouveautes || "- aucune"}\n` +
+    `MEILLEURES VENTES :\n${best || "- pas encore de ventes"}\n` +
     `CATALOGUE (${products.length} articles) :\n${catalog}`;
 
   const contents = [
