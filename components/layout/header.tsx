@@ -2,8 +2,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { User } from "lucide-react";
 import { SITE_NAME } from "@/lib/constants";
-import { getContact } from "@/lib/settings";
-import { WhatsAppButton } from "./whatsapp-button";
 import { MobileNav } from "./mobile-nav";
 import { getVisibleCategories } from "@/features/products/queries";
 import { CartButton } from "./cart-button";
@@ -19,10 +17,7 @@ const NAV_LINKS = [
 ];
 
 export async function Header() {
-  const [contact, categories] = await Promise.all([
-    getContact(),
-    getVisibleCategories(),
-  ]);
+  const categories = await getVisibleCategories();
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
@@ -55,7 +50,6 @@ export async function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-1.5">
-          <WhatsAppButton phone={contact.whatsapp} />
           <Link
             href="/compte"
             aria-label="Espace client"

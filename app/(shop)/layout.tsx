@@ -4,16 +4,25 @@ import { Footer } from "@/components/layout/footer";
 import { WhatsAppFloat } from "@/components/layout/whatsapp-float";
 import { CookieBanner } from "@/components/layout/cookie-banner";
 import { AnnouncementBanner } from "@/components/layout/announcement-banner";
-import { getAnnouncement, getAnnouncementBg, getCookieBanner } from "@/lib/settings";
+import { AiAssistant } from "@/components/shop/ai-assistant";
+import {
+  getAiConfig,
+  getAnnouncement,
+  getAnnouncementBg,
+  getContact,
+  getCookieBanner,
+} from "@/lib/settings";
 
 export default async function ShopLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [cookieConfig, announcement] = await Promise.all([
+  const [cookieConfig, announcement, aiConfig, contact] = await Promise.all([
     getCookieBanner(),
     getAnnouncement(),
+    getAiConfig(),
+    getContact(),
   ]);
 
   return (
@@ -26,6 +35,9 @@ export default async function ShopLayout({
       {children}
       <Footer />
       <WhatsAppFloat />
+      {aiConfig.geminiApiKey && (
+        <AiAssistant whatsapp={contact.whatsapp} />
+      )}
       <CookieBanner config={cookieConfig} />
     </StoreProvider>
   );
