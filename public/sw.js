@@ -13,9 +13,8 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// Présence d'un listener fetch requise par Chrome pour rendre le site
-// installable (PWA). Aucune mise en cache — le réseau fait tout.
-self.addEventListener("fetch", () => {});
+// Pas de listener "fetch" : Chrome n'en exige plus pour l'installabilité
+// PWA (le manifest suffit) et un handler vide ralentit chaque navigation.
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();

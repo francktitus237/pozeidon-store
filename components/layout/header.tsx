@@ -32,7 +32,6 @@ export async function Header() {
             width={44}
             height={44}
             className="h-11 w-11 object-contain"
-            priority
           />
           <span className="hidden flex-col leading-tight sm:flex">
             <span className="text-base font-bold uppercase tracking-wide text-navy-900">
