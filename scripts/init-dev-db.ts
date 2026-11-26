@@ -69,6 +69,8 @@ sqlite.exec(`
     district TEXT NOT NULL,
     place_type TEXT NOT NULL,
     has_kit INTEGER NOT NULL DEFAULT 0,
+    kit_type TEXT,
+    preferred_date TEXT,
     description TEXT,
     photo_url TEXT,
     status TEXT NOT NULL DEFAULT 'new',
@@ -114,6 +116,8 @@ const addColumn = (table: string, col: string, def: string) => {
 };
 addColumn("orders", "discount", "INTEGER NOT NULL DEFAULT 0");
 addColumn("products", "video_url", "TEXT");
+addColumn("installation_requests", "kit_type", "TEXT");
+addColumn("installation_requests", "preferred_date", "TEXT");
 
 // Migration : scinder l'ancienne catégorie "ordinateurs" en neufs / occasion
 sqlite.exec(`

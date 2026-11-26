@@ -90,6 +90,8 @@ export async function initPostgres() {
         district TEXT NOT NULL,
         place_type TEXT NOT NULL,
         has_kit BOOLEAN NOT NULL DEFAULT false,
+        kit_type TEXT,
+        preferred_date TEXT,
         description TEXT,
         photo_url TEXT,
         status TEXT NOT NULL DEFAULT 'new',
@@ -132,6 +134,8 @@ export async function initPostgres() {
     // Colonnes ajoutées après la première version (bases existantes)
     await sql`ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount INTEGER NOT NULL DEFAULT 0`;
     await sql`ALTER TABLE products ADD COLUMN IF NOT EXISTS video_url TEXT`;
+    await sql`ALTER TABLE installation_requests ADD COLUMN IF NOT EXISTS kit_type TEXT`;
+    await sql`ALTER TABLE installation_requests ADD COLUMN IF NOT EXISTS preferred_date TEXT`;
     console.log("[db] Schéma Postgres vérifié/créé.");
 
     // ── Synchronisation du catalogue initial ──

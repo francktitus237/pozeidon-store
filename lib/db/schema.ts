@@ -121,6 +121,8 @@ export const installationRequests = pgTable("installation_requests", {
   district: text("district").notNull(),
   placeType: text("place_type").notNull(),
   hasKit: boolean("has_kit").notNull().default(false),
+  kitType: text("kit_type"),
+  preferredDate: text("preferred_date"),
   description: text("description"),
   photoUrl: text("photo_url"),
   status: text("status").notNull().default("new"),

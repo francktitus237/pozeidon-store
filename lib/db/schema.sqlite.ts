@@ -119,6 +119,8 @@ export const installationRequests = sqliteTable("installation_requests", {
   district: text("district").notNull(),
   placeType: text("place_type").notNull(),
   hasKit: integer("has_kit", { mode: "boolean" }).notNull().default(false),
+  kitType: text("kit_type"),
+  preferredDate: text("preferred_date"),
   description: text("description"),
   photoUrl: text("photo_url"),
   status: text("status").notNull().default("new"),
