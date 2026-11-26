@@ -89,6 +89,20 @@ sqlite.exec(`
     data TEXT NOT NULL,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+  CREATE TABLE IF NOT EXISTS product_reviews (
+    id TEXT PRIMARY KEY,
+    product_id TEXT NOT NULL REFERENCES products(id),
+    name TEXT NOT NULL,
+    rating INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    approved INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
+  CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+    id TEXT PRIMARY KEY,
+    email TEXT NOT NULL UNIQUE,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
 `);
 
 // Ajout des colonnes apparues après la première version (bases existantes)

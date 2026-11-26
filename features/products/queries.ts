@@ -3,11 +3,12 @@
 // instantanées ; les actions admin invalident via revalidateTag().
 
 import { db } from "@/lib/db";
-import { categories, products } from "@/lib/db/schema";
+import { categories, orders, products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import type { Product } from "@/types";
 import { CATEGORIES } from "@/lib/constants";
+import { toIso } from "@/lib/dates";
 
 function toProduct(row: typeof products.$inferSelect): Product {
   return {
@@ -24,7 +25,7 @@ function toProduct(row: typeof products.$inferSelect): Product {
     // Dedup : aucune image ne s'affiche en double
     images: [...new Set(row.images as string[])],
     installationAvailable: row.installationAvailable,
-    createdAt: row.createdAt.toISOString(),
+    createdAt: toIso(row.createdAt),
   };
 }
 
@@ -52,6 +53,52 @@ export async function getFlashProducts(): Promise<Product[]> {
   return all.filter((p) => p.promoPrice != null).slice(0, 4);
 }
 
+// Classement des ventes réelles : quantités cumulées par article sur toutes
+// les commandes non annulées. Tag "products" : rafraîchi après chaque
+// commande (createOrder revalide ce tag).
+const getSalesRankingCached = unstable_cache(
+  async (): Promise<{ productId: string; sold: number }[]> => {
+    try {
+      const rows = await db
+        .select({ items: orders.items, status: orders.status })
+        .from(orders);
+      const count = new Map<string, number>();
+      for (const o of rows) {
+        if (o.status === "cancelled") continue;
+        for (const i of o.items as { productId: string; quantity: number }[]) {
+          count.set(i.productId, (count.get(i.productId) ?? 0) + i.quantity);
+        }
+      }
+      return [...count.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([productId, sold]) => ({ productId, sold }));
+    } catch {
+      return [];
+    }
+  },
+  ["sales-ranking"],
+  { tags: ["products"], revalidate: 60 }
+);
+
+/** Articles les plus vendus (commandes réelles). Vide si aucune vente. */
+export async function getBestSellers(limit = 8): Promise<Product[]> {
+  const [ranking, all] = await Promise.all([
+    getSalesRankingCached(),
+    getProducts(),
+  ]);
+  const byId = new Map(all.map((p) => [p.id, p]));
+  return ranking
+    .filter((r) => byId.has(r.productId))
+    .slice(0, limit)
+    .map((r) => byId.get(r.productId)!);
+}
+
+/** Ids des N articles les plus vendus → badge « Populaire » sur les cartes. */
+export async function getPopularIds(limit = 8): Promise<Set<string>> {
+  const ranking = await getSalesRankingCached();
+  return new Set(ranking.slice(0, limit).map((r) => r.productId));
+}
+
 const getProductBySlugCached = unstable_cache(
   async (slug: string): Promise<Product | null> => {
     try {
@@ -61,7 +108,8 @@ const getProductBySlugCached = unstable_cache(
         .where(eq(products.slug, slug));
       if (row) return toProduct(row);
       return null;
-    } catch {
+    } catch (err) {
+      console.error("[products] getProductBySlug failed:", err);
       return null;
     }
   },

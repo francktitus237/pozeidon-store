@@ -82,6 +82,20 @@ export function PaginatedTable({ headers, children, pageSize = 10 }: Props) {
   );
 }
 
+/** Liste paginée de cartes/blocs : `children` = tableau d'éléments <div> */
+export function PaginatedDiv({
+  children,
+  pageSize = 10,
+}: Omit<Props, "headers">) {
+  const { items, page, pageCount, setPage } = usePaged(children, pageSize);
+  return (
+    <div className="flex flex-col gap-3">
+      {items}
+      <Controls page={page} pageCount={pageCount} onChange={setPage} />
+    </div>
+  );
+}
+
 /** Liste paginée : `children` = tableau d'éléments <li> */
 export function PaginatedUl({ children, pageSize = 10 }: Omit<Props, "headers">) {
   const { items, page, pageCount, setPage } = usePaged(children, pageSize);

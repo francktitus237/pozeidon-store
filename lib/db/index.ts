@@ -22,9 +22,11 @@ const pgClient = isPostgres
     })
   : null;
 if (pgClient) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof (pgClient as any).on === "function") {
-    (pgClient as any).on("error", (err: Error) => {
+  const emitter = pgClient as unknown as {
+    on?: (event: string, cb: (err: Error) => void) => void;
+  };
+  if (typeof emitter.on === "function") {
+    emitter.on("error", (err: Error) => {
       console.error("[db] postgres connection error", err.message);
     });
   }

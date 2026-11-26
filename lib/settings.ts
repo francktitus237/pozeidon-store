@@ -203,6 +203,9 @@ export interface SocialConfig {
   facebookEnabled: boolean;
   instagramUserId: string;
   instagramEnabled: boolean;
+  // URLs publiques des profils — affichées comme icônes dans le footer
+  facebookUrl: string;
+  instagramUrl: string;
 }
 
 const DEFAULT_SOCIAL: SocialConfig = {
@@ -211,6 +214,8 @@ const DEFAULT_SOCIAL: SocialConfig = {
   facebookEnabled: false,
   instagramUserId: "",
   instagramEnabled: false,
+  facebookUrl: "",
+  instagramUrl: "",
 };
 
 export async function getSocialConfig(): Promise<SocialConfig> {
@@ -221,6 +226,49 @@ export async function getSocialConfig(): Promise<SocialConfig> {
     return { ...DEFAULT_SOCIAL, ...parsed };
   } catch {
     return DEFAULT_SOCIAL;
+  }
+}
+
+// ── Statistiques de visite (éditable dans Réglages) ──
+// Google Analytics 4 — gratuit. L'ID est au format "G-XXXXXXXXXX".
+
+export interface AnalyticsConfig {
+  gaId: string;
+}
+
+const DEFAULT_ANALYTICS: AnalyticsConfig = { gaId: "" };
+
+export async function getAnalyticsConfig(): Promise<AnalyticsConfig> {
+  try {
+    const value = await getSettingRow("analytics");
+    if (!value) return DEFAULT_ANALYTICS;
+    const parsed = JSON.parse(value) as Partial<AnalyticsConfig>;
+    return { gaId: typeof parsed.gaId === "string" ? parsed.gaId : "" };
+  } catch {
+    return DEFAULT_ANALYTICS;
+  }
+}
+
+// ── Newsletter (éditable dans /gestion/newsletter) ──
+// welcomeCode : code promo affiché au visiteur après inscription.
+
+export interface NewsletterConfig {
+  welcomeCode: string;
+}
+
+const DEFAULT_NEWSLETTER: NewsletterConfig = { welcomeCode: "" };
+
+export async function getNewsletterConfig(): Promise<NewsletterConfig> {
+  try {
+    const value = await getSettingRow("newsletter");
+    if (!value) return DEFAULT_NEWSLETTER;
+    const parsed = JSON.parse(value) as Partial<NewsletterConfig>;
+    return {
+      welcomeCode:
+        typeof parsed.welcomeCode === "string" ? parsed.welcomeCode : "",
+    };
+  } catch {
+    return DEFAULT_NEWSLETTER;
   }
 }
 
@@ -337,6 +385,57 @@ export async function getTariffs(): Promise<TariffsConfig> {
     };
   } catch {
     return DEFAULT_TARIFFS;
+  }
+}
+
+// ── Emails transactionnels (éditable dans Réglages) ──
+// Resend — gratuit jusqu'à 100 emails/jour. L'adresse d'expédition doit
+// être vérifiée sur resend.com (domaine vérifié) ou "onboarding@resend.dev"
+// pour les tests (envoi uniquement vers l'email du compte Resend).
+
+export interface EmailConfig {
+  resendApiKey: string;
+  fromEmail: string;
+  orderConfirmationEnabled: boolean;
+}
+
+const DEFAULT_EMAIL: EmailConfig = {
+  resendApiKey: "",
+  fromEmail: "onboarding@resend.dev",
+  orderConfirmationEnabled: false,
+};
+
+export async function getEmailConfig(): Promise<EmailConfig> {
+  try {
+    const value = await getSettingRow("email");
+    if (!value) return DEFAULT_EMAIL;
+    const parsed = JSON.parse(value) as Partial<EmailConfig>;
+    return { ...DEFAULT_EMAIL, ...parsed };
+  } catch {
+    return DEFAULT_EMAIL;
+  }
+}
+
+// ── Assistant IA (éditable dans Réglages) ──
+// Gemini — clé gratuite sur Google AI Studio (aistudio.google.com).
+
+export interface AiConfig {
+  geminiApiKey: string;
+}
+
+const DEFAULT_AI: AiConfig = { geminiApiKey: "" };
+
+export async function getAiConfig(): Promise<AiConfig> {
+  try {
+    const value = await getSettingRow("ai");
+    if (!value) return DEFAULT_AI;
+    const parsed = JSON.parse(value) as Partial<AiConfig>;
+    return {
+      geminiApiKey:
+        typeof parsed.geminiApiKey === "string" ? parsed.geminiApiKey : "",
+    };
+  } catch {
+    return DEFAULT_AI;
   }
 }
 

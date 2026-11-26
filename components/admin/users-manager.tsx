@@ -95,7 +95,7 @@ export function UsersManager({
           <div className="flex-1">
             <p className="font-semibold text-navy-900">{envUser}</p>
             <p className="text-xs text-muted-foreground">
-              Compte principal — configuré via les variables d'environnement
+              Compte principal — configuré via les variables d’environnement
               (ADMIN_USERNAME / ADMIN_PASSWORD)
             </p>
           </div>

@@ -14,6 +14,7 @@ const LINKS = [
   { href: "/entreprises", label: "Entreprises" },
   { href: "/a-propos", label: "À propos" },
   { href: "/compte", label: "Espace client" },
+  { href: "/favoris", label: "Mes favoris" },
   { href: "/contact", label: "Contact" },
 ];
 

@@ -3,7 +3,10 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { promoCodes } from "@/lib/db/schema";
 import {
+  getAiConfig,
+  getAnalyticsConfig,
   getAnnouncement,
+  getEmailConfig,
   getCookieBanner,
   getContact,
   getPaymentConfig,
@@ -15,8 +18,12 @@ import { CookieSettingsForm } from "@/components/admin/cookie-settings-form";
 import { ContactSettingsForm } from "@/components/admin/contact-settings-form";
 import { PaymentSettingsForm } from "@/components/admin/payment-settings-form";
 import { SocialSettingsForm } from "@/components/admin/social-settings-form";
+import { PushToggle } from "@/components/admin/push-toggle";
 import { TariffsSettingsForm } from "@/components/admin/tariffs-settings-form";
 import { PromoManager } from "@/components/admin/promo-manager";
+import { AnalyticsSettingsForm } from "@/components/admin/analytics-settings-form";
+import { EmailSettingsForm } from "@/components/admin/email-settings-form";
+import { AiSettingsForm } from "@/components/admin/ai-settings-form";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +31,7 @@ export default async function AdminSettingsPage() {
   const session = await auth();
   if (!session) redirect("/connexion");
 
-  const [announcement, cookieBanner, contact, payments, tariffs, social, promos] =
+  const [announcement, cookieBanner, contact, payments, tariffs, social, promos, analytics, emailCfg, aiCfg] =
     await Promise.all([
       getAnnouncement(),
       getCookieBanner(),
@@ -33,6 +40,9 @@ export default async function AdminSettingsPage() {
       getTariffs(),
       getSocialConfig(),
       db.select().from(promoCodes).orderBy(promoCodes.createdAt),
+      getAnalyticsConfig(),
+      getEmailConfig(),
+      getAiConfig(),
     ]);
 
   return (
@@ -68,6 +78,55 @@ export default async function AdminSettingsPage() {
           Manager pour synchroniser vos articles vers le catalogue WhatsApp
           Business, la boutique Facebook et Instagram Shopping (gratuit).
         </p>
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Notifications de commande
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Recevez une notification instantanée (numéro, client, ville, montant)
+          à chaque nouvelle commande — gratuit, sans service tiers. Activez-la
+          sur chaque appareil où vous voulez être alerté (téléphone, PC…).
+        </p>
+        <PushToggle />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Statistiques de visite
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Mesurez votre trafic avec Google Analytics 4 (gratuit) : visiteurs,
+          pages vues, provenance. Le script n&apos;est chargé que si un ID est
+          renseigné ici.
+        </p>
+        <AnalyticsSettingsForm config={analytics} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Emails de confirmation
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Envoyez automatiquement un récapitulatif de commande par email via
+          Resend (gratuit jusqu&apos;à 100 emails/jour — clé sur resend.com).
+          L&apos;adresse d&apos;expédition doit appartenir à votre domaine
+          vérifié Resend.
+        </p>
+        <EmailSettingsForm config={emailCfg} />
+      </div>
+
+      <div className="rounded-lg border bg-card p-6">
+        <h2 className="mb-1 text-lg font-semibold text-navy-900">
+          Intelligence artificielle
+        </h2>
+        <p className="mb-5 text-sm text-muted-foreground">
+          Rédaction automatique des descriptions d&apos;articles avec Gemini
+          (clé gratuite Google AI Studio). La clé reste côté serveur, jamais
+          exposée au navigateur.
+        </p>
+        <AiSettingsForm config={aiCfg} />
       </div>
 
       <div className="rounded-lg border bg-card p-6">

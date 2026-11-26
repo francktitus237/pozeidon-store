@@ -51,15 +51,23 @@ const compact = new Intl.NumberFormat("fr-FR", {
 
 const full = new Intl.NumberFormat("fr-FR");
 
-function FcfaTick({ x = 0, y = 0, payload }: any) {
+function FcfaTick({
+  x = 0,
+  y = 0,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: number };
+}) {
   return (
     <text x={x} y={y} dy={12} textAnchor="middle" fontSize={11} fill="#64748b">
-      {compact.format(payload.value)}
+      {compact.format(payload?.value ?? 0)}
     </text>
   );
 }
 
-const tooltipFmt = (v: any) =>
+const tooltipFmt = (v: unknown) =>
   `${full.format(Number(v))} FCFA`;
 
 export function RevenueChart({ data }: { data: RevenuePoint[] }) {

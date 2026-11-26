@@ -1,0 +1,25 @@
+{
+  "name": "Pozeidon Engineering SARL",
+  "short_name": "Pozeidon",
+  "description": "Boutique d'équipement informatique et d'accessoires Starlink au Cameroun.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "lang": "fr",
+  "background_color": "#ffffff",
+  "theme_color": "#1B1F5C",
+  "icons": [
+    {
+      "src": "/logo-mark.png",
+      "sizes": "794x794",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-mark.png",
+      "sizes": "794x794",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

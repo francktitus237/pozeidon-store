@@ -1,13 +1,16 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { orders, promoCodes } from "@/lib/db/schema";
+import { orders, products, promoCodes } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { auth } from "@/auth";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { getTariffs } from "@/lib/settings";
+import { sendOrderPush, sendStockAlertPush } from "@/lib/push";
+import { sendOrderConfirmationEmail } from "@/lib/email";
+import { LOW_STOCK_THRESHOLD } from "@/lib/constants";
 import type { OrderStatus, PaymentMethod } from "@/types";
 
 const createOrderSchema = z.object({
@@ -34,6 +37,12 @@ const createOrderSchema = z.object({
   paymentMethod: z.enum(["mtn_momo", "orange_money", "cash_on_delivery"]),
   promoCode: z.string().optional(),
 });
+
+const PAYMENT_LABELS: Record<string, string> = {
+  mtn_momo: "MTN Mobile Money",
+  orange_money: "Orange Money",
+  cash_on_delivery: "Paiement à la livraison",
+};
 
 function generateOrderNumber(): string {
   const digits = Math.floor(1000000 + Math.random() * 9000000); // 7 chiffres
@@ -97,7 +106,65 @@ export async function createOrder(input: unknown) {
     status: "pending",
   });
 
+  // Décrémenter le stock des articles commandés (borné à 0).
+  // Un article "en stock" qui tombe à 0 passe automatiquement en "épuisé" ;
+  // les articles "sur commande" gardent leur statut.
+  const stockAlerts: { name: string; stock: number }[] = [];
+  for (const item of data.items) {
+    const [p] = await db
+      .select({
+        name: products.name,
+        stock: products.stock,
+        status: products.status,
+      })
+      .from(products)
+      .where(eq(products.id, item.productId));
+    if (!p) continue;
+    const newStock = Math.max(0, p.stock - item.quantity);
+    await db
+      .update(products)
+      .set({
+        stock: newStock,
+        ...(newStock === 0 && p.status === "in_stock"
+          ? { status: "out_of_stock" }
+          : {}),
+      })
+      .where(eq(products.id, item.productId));
+    // Franchissement du seuil vers le bas → alerte stock bas / épuisé
+    if (p.stock > LOW_STOCK_THRESHOLD && newStock <= LOW_STOCK_THRESHOLD) {
+      stockAlerts.push({ name: p.name, stock: newStock });
+    }
+  }
+  for (const a of stockAlerts) await sendStockAlertPush(a.name, a.stock);
+
+  // Email de confirmation si le client a renseigné une adresse (Resend,
+  // activé dans Réglages — échec silencieux, jamais bloquant).
+  if (data.email) {
+    await sendOrderConfirmationEmail({
+      number: orderNumber,
+      customerName: data.customerName.trim(),
+      email: data.email,
+      city: data.city,
+      district: data.district.trim(),
+      total,
+      deliveryFee,
+      items: data.items,
+      paymentLabel: PAYMENT_LABELS[data.paymentMethod] ?? data.paymentMethod,
+    });
+  }
+
+  // Notification push sur les appareils de l'admin (gratuit, voir Réglages).
+  await sendOrderPush({
+    number: orderNumber,
+    customerName: data.customerName.trim(),
+    city: data.city,
+    total,
+    itemCount: data.items.reduce((s, i) => s + i.quantity, 0),
+  });
+
+  revalidateTag("products", "max");
   revalidatePath("/gestion/commandes");
+  revalidatePath("/gestion/statistiques");
   return { ok: true, number: orderNumber };
 }
 

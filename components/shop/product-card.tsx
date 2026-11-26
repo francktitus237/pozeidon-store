@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { WishlistButton } from "@/components/shop/wishlist-button";
 import { priceLabel } from "@/lib/constants";
 import type { Product } from "@/types";
 
@@ -17,7 +18,13 @@ function isNew(createdAt: string, days = 14) {
   );
 }
 
-export function ProductCard({ product }: { product: Product }) {
+export function ProductCard({
+  product,
+  popular = false,
+}: {
+  product: Product;
+  popular?: boolean;
+}) {
   const hasPromo =
     product.promoPrice != null &&
     product.promoPrice > 0 &&
@@ -59,6 +66,14 @@ export function ProductCard({ product }: { product: Product }) {
                 Nouveau
               </Badge>
             )}
+            {popular && !isOut && (
+              <Badge className="bg-sky-600 text-white hover:bg-sky-600">
+                Populaire
+              </Badge>
+            )}
+          </div>
+          <div className="absolute right-2 top-2">
+            <WishlistButton product={product} />
           </div>
           {isOut && (
             <div className="absolute inset-0 flex items-center justify-center">

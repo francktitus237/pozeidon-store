@@ -14,7 +14,7 @@ export default async function CategoriesAdminPage() {
       <h1 className="mb-1 text-2xl font-bold text-navy-900">Catégories</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         Les catégories créées ici apparaissent dans la boutique, le menu et le
-        formulaire d'articles.
+        formulaire d’articles.
       </p>
       <CategoryManager rows={rows} />
     </div>

@@ -50,13 +50,13 @@ export default async function AproposPage() {
           <p className="text-sm leading-relaxed text-muted-foreground">
             {SITE_NAME} est une entreprise basée à Douala spécialisée dans la
             vente de matériel informatique (ordinateurs neufs et occasion
-            contrôlés, accessoires), l'installation et la configuration de kits
+            contrôlés, accessoires), l’installation et la configuration de kits
             Starlink, la maintenance informatique et la vidéosurveillance.
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Notre objectif : rendre la technologie fiable et accessible aux
             particuliers comme aux entreprises, avec un accompagnement de bout
-            en bout — du choix du produit à l'installation sur site.
+            en bout — du choix du produit à l’installation sur site.
           </p>
         </section>
 

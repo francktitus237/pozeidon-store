@@ -2,7 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { db } from "@/lib/db";
 import { orders, products, installationRequests } from "@/lib/db/schema";
-import { formatPrice } from "@/lib/constants";
+import { formatPrice, LOW_STOCK_THRESHOLD } from "@/lib/constants";
+import { toDate } from "@/lib/dates";
 import {
   Package,
   ShoppingBag,
@@ -14,7 +15,7 @@ import {
 import Link from "next/link";
 import { KpiCard } from "@/components/admin/kpi-card";
 
-const LOW_STOCK = 5;
+const LOW_STOCK = LOW_STOCK_THRESHOLD;
 
 const ORDER_STATUS: Record<string, { label: string; className: string }> = {
   pending: { label: "En attente", className: "bg-amber-100 text-amber-700" },
@@ -33,7 +34,7 @@ const INSTALL_STATUS: Record<string, { label: string; className: string }> = {
 };
 
 function dateDesc(a: { createdAt: Date | string }, b: { createdAt: Date | string }) {
-  return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  return toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime();
 }
 
 export default async function DashboardPage() {
@@ -123,7 +124,7 @@ export default async function DashboardPage() {
                 <AlertTriangle className="h-4 w-4" /> Stock bas
               </p>
               <ul className="space-y-1.5 text-sm">
-                {lowStock.map((p) => (
+                {lowStock.slice(0, 6).map((p) => (
                   <li key={p.id} className="flex justify-between">
                     <Link
                       href="/gestion/articles"

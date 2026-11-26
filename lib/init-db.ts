@@ -21,8 +21,9 @@ export async function initPostgres() {
     connect_timeout: 30,
   });
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (typeof (sql as any).on === "function") {
-    (sql as any).on("error", (err: Error) => {
+  const sqlAny = sql as any;
+  if (typeof sqlAny.on === "function") {
+    sqlAny.on("error", (err: Error) => {
       // Les erreurs de connexion après fermeture ne doivent pas faire planter le serveur.
       console.error("[db] postgres notice (init)", err.message);
     });
@@ -102,6 +103,22 @@ export async function initPostgres() {
         active BOOLEAN NOT NULL DEFAULT true,
         max_uses INTEGER,
         used_count INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+      )`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS product_reviews (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL REFERENCES products(id),
+        name TEXT NOT NULL,
+        rating INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        approved BOOLEAN NOT NULL DEFAULT false,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+      )`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id TEXT PRIMARY KEY,
+        email TEXT NOT NULL UNIQUE,
         created_at TIMESTAMP NOT NULL DEFAULT now()
       )`;
     // Fichiers uploadés stockés en base (base64) : persiste sans volume Docker

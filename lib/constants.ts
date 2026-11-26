@@ -35,5 +35,8 @@ export function priceLabel(amount: number): string {
   return amount > 0 ? formatPrice(amount) : "Prix sur demande";
 }
 
+/** Seuil « stock bas » : alerte push admin + widget dashboard. */
+export const LOW_STOCK_THRESHOLD = 5;
+
 // Fin affichée par le compteur de la vente flash (+2 jours).
 export const FLASH_SALE_END = Date.now() + 2 * 24 * 3600 * 1000;

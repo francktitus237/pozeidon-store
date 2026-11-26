@@ -7,6 +7,7 @@ import { WhatsAppButton } from "./whatsapp-button";
 import { MobileNav } from "./mobile-nav";
 import { getVisibleCategories } from "@/features/products/queries";
 import { CartButton } from "./cart-button";
+import { WishlistNavButton } from "./wishlist-nav-button";
 import { SearchBar } from "./search-bar";
 
 const NAV_LINKS = [
@@ -62,6 +63,7 @@ export async function Header() {
           >
             <User className="h-5 w-5 text-navy-900" />
           </Link>
+          <WishlistNavButton />
           <CartButton />
         </div>
       </div>

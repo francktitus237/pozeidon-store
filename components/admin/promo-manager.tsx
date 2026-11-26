@@ -9,6 +9,7 @@ import {
   togglePromoCode,
   deletePromoCode,
 } from "@/features/admin/promo-actions";
+import { PaginatedTable } from "@/components/admin/paginated-table";
 
 export interface PromoRow {
   id: string;
@@ -108,63 +109,52 @@ export function PromoManager({ rows }: { rows: PromoRow[] }) {
           Aucun code promo. Créez-en un pour lancer une offre marketing.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border bg-card">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-sky-50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-3">Code</th>
-                <th className="px-4 py-3">Remise</th>
-                <th className="px-4 py-3">Utilisations</th>
-                <th className="px-4 py-3">Statut</th>
-                <th className="px-4 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((p) => (
-                <tr key={p.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-mono font-bold">{p.code}</td>
-                  <td className="px-4 py-3">-{p.percent}%</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {p.usedCount}
-                    {p.maxUses != null ? ` / ${p.maxUses}` : " / ∞"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <button
-                      disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          await togglePromoCode(p.id, !p.active);
-                        })
-                      }
-                      className={`rounded-full px-3 py-1 text-xs font-medium ${
-                        p.active
-                          ? "bg-stock-in/15 text-stock-in"
-                          : "bg-muted text-muted-foreground"
-                      }`}
-                    >
-                      {p.active ? "Actif" : "Désactivé"}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <button
-                      disabled={pending}
-                      onClick={() => {
-                        if (confirm(`Supprimer le code ${p.code} ?`))
-                          startTransition(async () => {
-                            await deletePromoCode(p.id);
-                          });
-                      }}
-                      className="rounded-md p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600"
-                      aria-label={`Supprimer ${p.code}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <PaginatedTable
+          headers={["Code", "Remise", "Utilisations", "Statut", "Actions"]}
+        >
+          {rows.map((p) => (
+            <tr key={p.id} className="border-b last:border-0">
+              <td className="px-4 py-3 font-mono font-bold">{p.code}</td>
+              <td className="px-4 py-3">-{p.percent}%</td>
+              <td className="px-4 py-3 text-muted-foreground">
+                {p.usedCount}
+                {p.maxUses != null ? ` / ${p.maxUses}` : " / ∞"}
+              </td>
+              <td className="px-4 py-3">
+                <button
+                  disabled={pending}
+                  onClick={() =>
+                    startTransition(async () => {
+                      await togglePromoCode(p.id, !p.active);
+                    })
+                  }
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                    p.active
+                      ? "bg-stock-in/15 text-stock-in"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  {p.active ? "Actif" : "Désactivé"}
+                </button>
+              </td>
+              <td className="px-4 py-3 text-right">
+                <button
+                  disabled={pending}
+                  onClick={() => {
+                    if (confirm(`Supprimer le code ${p.code} ?`))
+                      startTransition(async () => {
+                        await deletePromoCode(p.id);
+                      });
+                  }}
+                  className="rounded-md p-2 text-muted-foreground hover:bg-red-50 hover:text-red-600"
+                  aria-label={`Supprimer ${p.code}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </td>
+            </tr>
+          ))}
+        </PaginatedTable>
       )}
     </div>
   );

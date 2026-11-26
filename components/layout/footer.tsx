@@ -2,19 +2,69 @@ import Link from "next/link";
 import Image from "next/image";
 import { MapPin, MessageCircle, Phone, Clock, CreditCard } from "lucide-react";
 import { PAYMENT_METHODS, SITE_NAME } from "@/lib/constants";
-import { getContact } from "@/lib/settings";
+import { getContact, getSocialConfig } from "@/lib/settings";
 import { getVisibleCategories } from "@/features/products/queries";
+import { NewsletterForm } from "./newsletter-form";
+
+// Icônes de marques — retirées de lucide-react, donc SVG inline.
+function FacebookIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+    </svg>
+  );
+}
+
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export async function Footer() {
-  const [contact, categories] = await Promise.all([
+  const [contact, categories, social] = await Promise.all([
     getContact(),
     getVisibleCategories(),
+    getSocialConfig(),
   ]);
   const tel = contact.whatsapp.replace(/\s/g, "");
 
   return (
     <footer className="mt-12 bg-navy-900 text-sky-50">
       <div className="container mx-auto px-4 py-10">
+        {/* Newsletter */}
+        <div className="mb-8 flex flex-col gap-3 border-b border-navy-700 pb-8 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold text-white">Newsletter</p>
+            <p className="text-sm text-sky-100/80">
+              Nouveautés et promotions directement dans votre boîte mail.
+            </p>
+          </div>
+          <NewsletterForm />
+        </div>
+
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-5">
           {/* Marque & coordonnées */}
           <div className="lg:col-span-2">
@@ -61,6 +111,33 @@ export async function Footer() {
                 <span className="leading-snug">{contact.address}</span>
               </p>
             </div>
+
+            {(social.facebookUrl || social.instagramUrl) && (
+              <div className="mt-4 flex items-center gap-3">
+                {social.facebookUrl && (
+                  <a
+                    href={social.facebookUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Facebook"
+                    className="rounded-full bg-navy-700 p-2 text-sky-100 transition-colors hover:bg-sky-600 hover:text-white"
+                  >
+                    <FacebookIcon className="h-4 w-4" />
+                  </a>
+                )}
+                {social.instagramUrl && (
+                  <a
+                    href={social.instagramUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Instagram"
+                    className="rounded-full bg-navy-700 p-2 text-sky-100 transition-colors hover:bg-sky-600 hover:text-white"
+                  >
+                    <InstagramIcon className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Nos produits */}

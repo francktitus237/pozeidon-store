@@ -39,6 +39,28 @@ export const products = pgTable("products", {
     .defaultNow(),
 });
 
+export const productReviews = pgTable("product_reviews", {
+  id: text("id").primaryKey(),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id),
+  name: text("name").notNull(),
+  rating: integer("rating").notNull(), // 1 à 5
+  text: text("text").notNull(),
+  approved: boolean("approved").notNull().default(false),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
+});
+
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
+});
+
 export const promoCodes = pgTable("promo_codes", {
   id: text("id").primaryKey(),
   code: text("code").notNull().unique(),

@@ -102,10 +102,10 @@ export function TariffsSettingsForm({ config }: { config: TariffsConfig }) {
         </p>
       </div>
 
-      {/* Forfaits d'installation */}
+      {/* Forfaits d’installation */}
       <div className="border-t pt-5">
         <p className="mb-2 text-sm font-semibold text-navy-900">
-          Forfaits d'installation
+          Forfaits d’installation
         </p>
         <div className="space-y-2">
           {installation.map((o, i) => (
@@ -170,7 +170,7 @@ export function TariffsSettingsForm({ config }: { config: TariffsConfig }) {
           <Plus className="h-4 w-4" /> Ajouter un forfait
         </button>
         <p className="mt-1.5 text-xs text-muted-foreground">
-          Laissez le prix vide pour afficher « sur devis » au lieu d'un
+          Laissez le prix vide pour afficher « sur devis » au lieu d’un
           montant sur la fiche produit.
         </p>
       </div>

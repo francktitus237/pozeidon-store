@@ -21,7 +21,9 @@ export function AnnouncementBanner({ announcement, bgClass }: Props) {
 
   useEffect(() => {
     const key = `announcement-dismissed-${announcement.text}`;
-    if (sessionStorage.getItem(key) === "1") setDismissed(true);
+    if (sessionStorage.getItem(key) === "1") {
+      queueMicrotask(() => setDismissed(true));
+    }
   }, [announcement.text]);
 
   if (!announcement.enabled || dismissed) return null;

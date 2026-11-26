@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import {
   Plus,
@@ -12,6 +12,7 @@ import {
   ChevronRight,
   X,
   Star,
+  Sparkles,
 } from "lucide-react";
 import { VideoField } from "./video-field";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +33,7 @@ import {
   deleteProduct,
   type ProductFormData,
 } from "@/features/admin/actions";
+import { generateProductDescription } from "@/features/admin/ai-actions";
 
 type Row = {
   id: string;
@@ -57,10 +59,12 @@ export function ProductManager({
   rows,
   categories,
   social,
+  ai = false,
 }: {
   rows: Row[];
   categories: { id: string; name: string }[];
   social: { facebook: boolean; instagram: boolean };
+  ai?: boolean;
 }) {
   const PAGE_SIZE = 10;
   const [search, setSearch] = useState("");
@@ -84,7 +88,33 @@ export function ProductManager({
   const [imagePaths, setImagePaths] = useState<string[]>([]);
   const [videoUrl, setVideoUrl] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [aiPending, setAiPending] = useState(false);
+  const descRef = useRef<HTMLTextAreaElement>(null);
   const [pending, startTransition] = useTransition();
+
+  async function onGenerateDescription(form: HTMLFormElement | null) {
+    if (!form) return;
+    const f = new FormData(form);
+    const catId = String(f.get("categoryId") ?? "");
+    const cat = categories.find((c) => c.id === catId);
+    setAiPending(true);
+    try {
+      const res = await generateProductDescription({
+        name: String(f.get("name") ?? ""),
+        reference: String(f.get("reference") ?? ""),
+        categoryName: cat?.name ?? catId,
+        price: Number(f.get("price") ?? 0),
+      });
+      if (res.error) {
+        toast.add({ title: "Génération impossible", description: res.error, type: "error" });
+      } else if (res.text && descRef.current) {
+        descRef.current.value = res.text;
+        toast.add({ title: "Description générée", type: "success" });
+      }
+    } finally {
+      setAiPending(false);
+    }
+  }
 
   function openCreate() {
     setEditing(null);
@@ -367,8 +397,24 @@ export function ProductManager({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium">Description</label>
+            <div className="flex items-center justify-between gap-2">
+              <label className="text-sm font-medium">Description</label>
+              {ai && (
+                <button
+                  type="button"
+                  disabled={aiPending}
+                  onClick={(e) =>
+                    void onGenerateDescription(e.currentTarget.form)
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-700 transition-colors hover:bg-sky-100 disabled:opacity-50"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {aiPending ? "Génération…" : "Générer avec l'IA"}
+                </button>
+              )}
+            </div>
             <textarea
+              ref={descRef}
               name="description"
               rows={3}
               defaultValue={editing?.description ?? ""}

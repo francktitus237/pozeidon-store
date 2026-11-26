@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { getBaseUrl } from "@/lib/site";
+import { Analytics } from "@/components/analytics";
+import { SwRegistrar } from "@/components/sw-registrar";
 
 const base = getBaseUrl();
 
@@ -9,6 +11,7 @@ export const metadata: Metadata = {
   description:
     "Boutique d'équipement informatique et d'accessoires Starlink au Cameroun : ordinateurs, câbles, supports, routeurs. Livraison et installation à Douala, Yaoundé et partout au Cameroun.",
   metadataBase: new URL(base),
+  manifest: "/manifest.json",
   openGraph: {
     type: "website",
     locale: "fr_FR",
@@ -28,7 +31,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Analytics />
+        <SwRegistrar />
+        {children}
+      </body>
     </html>
   );
 }

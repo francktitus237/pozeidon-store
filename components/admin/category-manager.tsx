@@ -6,6 +6,7 @@ import { Plus, Trash2, Pencil, FolderOpen, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ImageField } from "@/components/admin/image-field";
+import { PaginatedDiv } from "@/components/admin/paginated-table";
 import {
   createCategory,
   updateCategory,
@@ -102,7 +103,7 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
           Aucune catégorie en base — les catégories par défaut sont utilisées.
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <PaginatedDiv>
           {rows.map((c) =>
             editing?.id === c.id ? (
               <form
@@ -206,7 +207,7 @@ export function CategoryManager({ rows }: { rows: CategoryRow[] }) {
               </div>
             )
           )}
-        </div>
+        </PaginatedDiv>
       )}
       {error && editing === null && rows.length > 0 && (
         <p className="text-sm text-red-600">{error}</p>

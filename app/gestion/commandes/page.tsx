@@ -4,6 +4,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
+import { toDate } from "@/lib/dates";
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
 import { PaginatedTable } from "@/components/admin/paginated-table";
 import { buttonVariants } from "@/components/ui/button";
@@ -19,7 +20,7 @@ const PAYMENT_LABEL: Record<string, string> = {
 
 export default async function AdminOrdersPage() {
   const rows = (await db.select().from(orders)).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    (a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime()
   );
 
   return (
@@ -77,7 +78,7 @@ export default async function AdminOrdersPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(o.createdAt).toLocaleDateString("fr-FR")}
+                      {toDate(o.createdAt).toLocaleDateString("fr-FR")}
                     </td>
                     <td className="px-4 py-3">
                       <p className="font-medium">{o.customerName}</p>

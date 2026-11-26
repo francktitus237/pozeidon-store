@@ -15,6 +15,8 @@ import {
   Tag,
   FolderTree,
   ShieldCheck,
+  Star,
+  Mail,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
@@ -27,7 +29,9 @@ const ITEMS = [
   { href: "/gestion/commandes", icon: ShoppingBag, label: "Commandes", badgeKey: "orders" },
   { href: "/gestion/installations", icon: Wrench, label: "Installations", badgeKey: "installations" },
   { href: "/gestion/clients", icon: Users, label: "Clients" },
+  { href: "/gestion/avis", icon: Star, label: "Avis clients", badgeKey: "reviews" },
   { href: "/gestion/promos", icon: Tag, label: "Codes promo" },
+  { href: "/gestion/newsletter", icon: Mail, label: "Newsletter" },
   { href: "/gestion/contenu", icon: ImageIcon, label: "Contenu du site" },
   { href: "/gestion/statistiques", icon: BarChart3, label: "Statistiques" },
   { href: "/gestion/comptes", icon: ShieldCheck, label: "Comptes admin" },
@@ -37,6 +41,7 @@ const ITEMS = [
 export interface SidebarBadges {
   orders?: number;
   installations?: number;
+  reviews?: number;
 }
 
 export function AdminSidebar({ badges }: { badges?: SidebarBadges }) {

@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { db } from "@/lib/db";
 import { orders, products, installationRequests } from "@/lib/db/schema";
 import { formatPrice } from "@/lib/constants";
+import { toDate } from "@/lib/dates";
 import { ShoppingCart, Package, Wrench, TrendingUp } from "lucide-react";
 import {
   RevenueChart,
@@ -47,7 +48,7 @@ export default async function AdminStatsPage() {
   const byMonth = new Map<string, { total: number; orders: number }>();
   for (const o of allOrders) {
     if (o.status === "cancelled") continue;
-    const d = new Date(o.createdAt);
+    const d = toDate(o.createdAt);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
     const cur = byMonth.get(key) ?? { total: 0, orders: 0 };
     cur.total += o.total;
@@ -123,7 +124,7 @@ export default async function AdminStatsPage() {
       <div className="grid gap-6 xl:grid-cols-5">
         <div className="rounded-lg border bg-card p-5 xl:col-span-3">
           <h2 className="mb-3 font-semibold text-navy-900">
-            Chiffre d'affaires par mois
+            Chiffre d’affaires par mois
           </h2>
           <RevenueChart data={revenueData} />
         </div>

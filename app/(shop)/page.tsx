@@ -12,18 +12,23 @@ import { Testimonials } from "@/components/shop/testimonials";
 import { BlogPreview } from "@/components/shop/blog-preview";
 import { FLASH_SALE_END } from "@/lib/constants";
 import {
+  getBestSellers,
   getCategories,
   getFlashProducts,
+  getPopularIds,
   getProducts,
 } from "@/features/products/queries";
 import { Reveal } from "@/components/reveal";
 
 export default async function Home() {
-  const [products, flashProducts, categories] = await Promise.all([
-    getProducts(),
-    getFlashProducts(),
-    getCategories(),
-  ]);
+  const [products, flashProducts, categories, bestSellers, popularIds] =
+    await Promise.all([
+      getProducts(),
+      getFlashProducts(),
+      getCategories(),
+      getBestSellers(8),
+      getPopularIds(8),
+    ]);
 
   // Une section par catégorie qui contient des produits
   const sections = categories
@@ -55,6 +60,21 @@ export default async function Home() {
         </Reveal>
       )}
 
+      {/* Best-sellers — ventes réelles du site, masqué tant qu'il n'y a
+          pas encore de commande. */}
+      {bestSellers.length > 0 && (
+        <Reveal delay={180}>
+          <section>
+            <SectionHeading title="Nos best-sellers" href="/boutique" />
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {bestSellers.map((p) => (
+                <ProductCard key={p.id} product={p} popular />
+              ))}
+            </div>
+          </section>
+        </Reveal>
+      )}
+
       {/* Grilles par catégorie */}
       {sections.map((s, i) => (
         <Reveal key={s.slug} delay={200 + i * 60}>
@@ -65,7 +85,11 @@ export default async function Home() {
             />
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {s.items.map((p) => (
-                <ProductCard key={p.id} product={p} />
+                <ProductCard
+                  key={p.id}
+                  product={p}
+                  popular={popularIds.has(p.id)}
+                />
               ))}
             </div>
           </section>

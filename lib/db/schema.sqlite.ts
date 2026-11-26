@@ -37,6 +37,28 @@ export const products = sqliteTable("products", {
     .$defaultFn(() => new Date()),
 });
 
+export const productReviews = sqliteTable("product_reviews", {
+  id: text("id").primaryKey(),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id),
+  name: text("name").notNull(),
+  rating: integer("rating").notNull(), // 1 à 5
+  text: text("text").notNull(),
+  approved: integer("approved", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
+export const newsletterSubscribers = sqliteTable("newsletter_subscribers", {
+  id: text("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export const promoCodes = sqliteTable("promo_codes", {
   id: text("id").primaryKey(),
   code: text("code").notNull().unique(),

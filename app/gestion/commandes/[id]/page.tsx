@@ -11,11 +11,13 @@ import {
   Mail,
   MapPin,
   Tag,
+  MessageCircle,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { orders } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { formatPrice } from "@/lib/constants";
+import { toDate } from "@/lib/dates";
 import { OrderStatusSelect } from "@/components/admin/order-status-select";
 import type { OrderStatus } from "@/types";
 
@@ -35,6 +37,31 @@ const STATUS_LABELS: Record<string, string> = {
   delivered: "Livrée",
   cancelled: "Annulée",
 };
+
+// Message WhatsApp pré-rempli selon le statut — gratuit (wa.me, pas d'API).
+function customerNotifyUrl(order: {
+  number: string;
+  customerName: string;
+  city: string;
+  total: number;
+  status: string;
+  phone: string;
+  whatsapp: string | null;
+}) {
+  const raw = order.whatsapp || order.phone;
+  // wa.me exige le format international — préfixe 237 si numéro local (9 chiffres)
+  const num = raw.length <= 9 ? `237${raw}` : raw;
+  const firstName = order.customerName.split(" ")[0];
+  const messages: Record<string, string> = {
+    pending: `Bonjour ${firstName}, nous avons bien reçu votre commande ${order.number} (${formatPrice(order.total)}). Nous vous contactons pour organiser la livraison à ${order.city}.`,
+    confirmed: `Bonjour ${firstName}, votre commande ${order.number} est confirmée ! Montant : ${formatPrice(order.total)}. Livraison à ${order.city} très bientôt.`,
+    preparing: `Bonjour ${firstName}, votre commande ${order.number} est en préparation. Livraison à ${order.city} sous peu — restez joignable.`,
+    delivered: `Bonjour ${firstName}, votre commande ${order.number} a été livrée. Merci pour votre confiance ! N'hésitez pas si besoin.`,
+    cancelled: `Bonjour ${firstName}, votre commande ${order.number} a été annulée. Contactez-nous pour toute question ou pour commander à nouveau.`,
+  };
+  const msg = messages[order.status] ?? messages.pending;
+  return `https://wa.me/${num}?text=${encodeURIComponent(msg)}`;
+}
 
 export default async function OrderDetailPage({
   params,
@@ -62,7 +89,7 @@ export default async function OrderDetailPage({
           </h1>
           <p className="text-sm text-muted-foreground">
             Passée le{" "}
-            {new Date(order.createdAt).toLocaleDateString("fr-FR", {
+            {toDate(order.createdAt).toLocaleDateString("fr-FR", {
               day: "numeric",
               month: "long",
               year: "numeric",
@@ -122,6 +149,15 @@ export default async function OrderDetailPage({
               </span>
             </p>
           </div>
+          <a
+            href={customerNotifyUrl(order)}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-md bg-whatsapp-500 px-3.5 py-2 text-sm font-medium text-white transition-colors hover:bg-whatsapp-600"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Notifier le client sur WhatsApp
+          </a>
         </section>
 
         {/* Paiement */}

@@ -1,13 +1,16 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
+import { WishlistButton } from "@/components/shop/wishlist-button";
 import { ProductCard } from "@/components/shop/product-card";
+import { ProductReviews } from "@/components/shop/product-reviews";
+import { RecentlyViewed } from "@/components/shop/recently-viewed";
+import { getApprovedReviews, reviewStats } from "@/features/reviews/queries";
 import { ProductGallery } from "@/components/shop/product-gallery";
 import { getProductBySlug, getProducts } from "@/features/products/queries";
 import { getContact, getTariffs } from "@/lib/settings";
-import { priceLabel } from "@/lib/constants";
+import { priceLabel, SITE_NAME } from "@/lib/constants";
 import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
 
@@ -53,6 +56,12 @@ const STOCK_LABEL = {
   out_of_stock: { text: "Épuisé", className: "text-stock-out" },
 } as const;
 
+const SCHEMA_AVAILABILITY = {
+  in_stock: "https://schema.org/InStock",
+  on_order: "https://schema.org/PreOrder",
+  out_of_stock: "https://schema.org/OutOfStock",
+} as const;
+
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
   const [product, contact, tariffs] = await Promise.all([
@@ -61,6 +70,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     getTariffs(),
   ]);
   if (!product) notFound();
+  const productReviews = await getApprovedReviews(product.id);
+  const stats = reviewStats(productReviews);
 
   const hasPromo =
     product.promoPrice != null &&
@@ -76,8 +87,47 @@ export default async function ProductPage({ params }: ProductPageProps) {
     .filter((p) => p.categoryId === product.categoryId && p.id !== product.id)
     .slice(0, 4);
 
+  const base = getBaseUrl();
+  const absImages = product.images
+    .filter(Boolean)
+    .map((img) => (img.startsWith("http") ? img : `${base}${img}`));
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    sku: product.reference,
+    description: product.description ?? undefined,
+    image: absImages.length ? absImages : undefined,
+    brand: { "@type": "Brand", name: SITE_NAME },
+    ...(stats.count > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: stats.average,
+        reviewCount: stats.count,
+      },
+      review: productReviews.slice(0, 5).map((r) => ({
+        "@type": "Review",
+        author: { "@type": "Person", name: r.name },
+        reviewRating: { "@type": "Rating", ratingValue: r.rating },
+        reviewBody: r.text,
+      })),
+    }),
+    offers: {
+      "@type": "Offer",
+      url: `${base}/produit/${product.slug}`,
+      priceCurrency: "XAF",
+      price: hasPromo ? product.promoPrice : product.price,
+      availability: SCHEMA_AVAILABILITY[product.status],
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <nav className="mb-6 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-navy-900">Accueil</Link>
         {" / "}
@@ -147,11 +197,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
             </p>
           )}
 
-          <ProductActions
-                  product={product}
-                  whatsapp={contact.whatsapp}
-                  installOptions={tariffs.installation}
-                />
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <ProductActions
+                product={product}
+                whatsapp={contact.whatsapp}
+                installOptions={tariffs.installation}
+              />
+            </div>
+            <WishlistButton
+              product={product}
+              className="mt-1 rounded-full border bg-white p-2.5 shadow-sm transition-colors hover:bg-sky-50"
+            />
+          </div>
         </div>
       </div>
 
@@ -181,6 +239,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
         </section>
       )}
 
+      <ProductReviews productId={product.id} reviews={productReviews} />
+
       {similar.length > 0 && (
         <section className="mt-14">
           <h2 className="mb-4 text-xl font-bold text-navy-900">
@@ -193,6 +253,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </section>
       )}
+
+      <RecentlyViewed product={product} />
     </main>
   );
 }
