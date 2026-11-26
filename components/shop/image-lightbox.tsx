@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Props {
@@ -93,7 +93,7 @@ export function ImageLightbox({
         className="relative aspect-square w-full max-w-4xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <Image
+        <SkeletonImage
           src={images[index]}
           alt={`${alt} - ${index + 1}`}
           fill

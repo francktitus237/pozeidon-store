@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import { ProductCard } from "@/components/shop/product-card";
+import { Reveal } from "@/components/reveal";
 import { ProductReviews } from "@/components/shop/product-reviews";
 import { RecentlyViewed } from "@/components/shop/recently-viewed";
 import { getApprovedReviews, reviewStats } from "@/features/reviews/queries";
@@ -247,8 +248,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
             Produits similaires
           </h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {similar.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {similar.map((p, i) => (
+              <Reveal key={p.id} delay={(i % 4) * 60}>
+                <ProductCard product={p} />
+              </Reveal>
             ))}
           </div>
         </section>

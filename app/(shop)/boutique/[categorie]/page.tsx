@@ -7,6 +7,7 @@ import {
   getVisibleCategories,
 } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
+import { Reveal } from "@/components/reveal";
 import { ShopPagination } from "@/components/shop/pagination";
 import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
@@ -215,8 +216,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       ) : (
         <>
           <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            {pageItems.map((p) => (
-              <ProductCard key={p.id} product={p} />
+            {pageItems.map((p, i) => (
+              <Reveal key={p.id} delay={(i % 4) * 60}>
+                <ProductCard product={p} />
+              </Reveal>
             ))}
           </div>
           <ShopPagination

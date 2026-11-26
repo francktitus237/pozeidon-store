@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import Link from "next/link";
 import { Heart, ShoppingCart, Trash2 } from "lucide-react";
 import { useWishlist } from "@/hooks/use-wishlist";
@@ -68,7 +68,7 @@ export function WishlistView() {
                 className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md bg-sky-50"
               >
                 {item.image ? (
-                  <Image
+                  <SkeletonImage
                     src={item.image}
                     alt={item.name}
                     fill

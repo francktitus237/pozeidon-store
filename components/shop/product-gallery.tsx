@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import { Expand } from "lucide-react";
 import { ImageLightbox } from "./image-lightbox";
 
@@ -24,7 +24,7 @@ export function ProductGallery({ images, alt }: Props) {
         aria-label="Agrandir l'image"
       >
         {main ? (
-          <Image
+          <SkeletonImage
             src={main}
             alt={alt}
             fill
@@ -67,7 +67,7 @@ export function ProductGallery({ images, alt }: Props) {
               }`}
               aria-label={`Image ${i + 1}`}
             >
-              <Image
+              <SkeletonImage
                 src={src}
                 alt={`${alt} - ${i + 1}`}
                 fill

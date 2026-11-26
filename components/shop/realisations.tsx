@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import { getRealisations } from "@/lib/settings";
 
 export async function Realisations() {
@@ -18,7 +18,7 @@ export async function Realisations() {
           >
             {w.image ? (
               <>
-                <Image
+                <SkeletonImage
                   src={w.image}
                   alt={`${w.city} — ${w.label}`}
                   fill

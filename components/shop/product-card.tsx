@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { WishlistButton } from "@/components/shop/wishlist-button";
@@ -41,7 +41,7 @@ export function ProductCard({
       <Card className="overflow-hidden border transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-md">
         <div className="relative aspect-square overflow-hidden bg-sky-50">
           {product.images[0] ? (
-            <Image
+            <SkeletonImage
               src={product.images[0]}
               alt={product.name}
               fill

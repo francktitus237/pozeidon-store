@@ -47,12 +47,36 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [speaking, setSpeaking] = useState<number | null>(null);
+  const [hint, setHint] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [msgs, loading]);
+
+  // Bulle d'accroche : après 5 s, invite le visiteur à poser sa question.
+  // Affichée une seule fois par session, disparaît toute seule au bout de 12 s.
+  const dismissHint = () => {
+    setHint(false);
+    try {
+      sessionStorage.setItem("pze-ai-hint", "1");
+    } catch {}
+  };
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("pze-ai-hint")) return;
+    } catch {}
+    const t = setTimeout(() => setHint(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => {
+    if (!hint) return;
+    const t = setTimeout(dismissHint, 12000);
+    return () => clearTimeout(t);
+  }, [hint]);
 
   async function send() {
     const text = input.trim();
@@ -102,11 +126,32 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
       {/* Bulle flottante, empilée au-dessus du bouton WhatsApp */}
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          dismissHint();
+          setOpen(!open);
+        }}
         aria-label="Assistant virtuel"
         className="fixed bottom-24 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-sky-600 text-white shadow-lg transition-transform hover:scale-105"
       >
+        {!open && (
+          <span
+            aria-hidden
+            className="absolute inset-0 motion-safe:animate-ping rounded-full bg-sky-600 opacity-30"
+          />
+        )}
         {open ? <X className="h-6 w-6" /> : <Bot className="h-7 w-7" />}
+
+        {/* Accroche qui attire l'oeil vers l'assistant */}
+        {hint && !open && (
+          <span className="animate-fade-up absolute right-full top-1/2 mr-3 w-56 -translate-y-1/2 rounded-xl rounded-br-sm border bg-white px-3 py-2.5 text-left text-xs font-medium leading-snug text-navy-900 shadow-lg">
+            Une question sur nos produits ?<br />
+            Je réponds tout de suite 👋
+            <span
+              aria-hidden
+              className="absolute -right-1.5 top-1/2 h-3 w-3 -translate-y-1/2 rotate-45 border-r border-t bg-white"
+            />
+          </span>
+        )}
       </button>
 
       {open && (

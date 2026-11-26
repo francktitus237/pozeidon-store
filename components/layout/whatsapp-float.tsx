@@ -11,7 +11,11 @@ export async function WhatsAppFloat() {
       aria-label="Nous contacter sur WhatsApp"
       className="fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-whatsapp-500 text-white shadow-lg transition-transform hover:scale-105"
     >
-      <MessageCircle className="h-7 w-7" />
+      <span
+        aria-hidden
+        className="absolute inset-0 motion-safe:animate-ping rounded-full bg-whatsapp-500 opacity-25"
+      />
+      <MessageCircle className="relative h-7 w-7" />
     </a>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import Autoplay from "embla-carousel-autoplay";
 import {
   Carousel,
@@ -55,7 +55,7 @@ export function HeroBanner() {
         {SLIDES.map((s, i) => (
           <CarouselItem key={i}>
             <div className="relative flex min-h-56 flex-col items-start justify-center gap-3 overflow-hidden rounded-lg px-6 py-10 text-white md:min-h-72 md:px-12">
-              <Image
+              <SkeletonImage
                 src={s.image}
                 alt=""
                 fill

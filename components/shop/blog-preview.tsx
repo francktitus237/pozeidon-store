@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { SkeletonImage } from "@/components/ui/skeleton-image";
 import { ArrowRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getConseils } from "@/lib/settings";
@@ -24,7 +24,7 @@ export async function BlogPreview() {
           <Card key={post.title} className="overflow-hidden">
             <div className="relative flex aspect-video items-center justify-center bg-sky-50 text-sm text-sky-600">
               {post.image ? (
-                <Image
+                <SkeletonImage
                   src={post.image}
                   alt={post.title}
                   fill
