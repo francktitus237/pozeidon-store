@@ -7,6 +7,7 @@ import {
   getVisibleCategories,
 } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
+import { ShopPagination } from "@/components/shop/pagination";
 import { getBaseUrl } from "@/lib/site";
 import type { Metadata } from "next";
 
@@ -14,8 +15,10 @@ export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ categorie: string }>;
-  searchParams: Promise<{ tri?: string; dispo?: string; promo?: string }>;
+  searchParams: Promise<{ tri?: string; dispo?: string; promo?: string; page?: string }>;
 }
+
+const PAGE_SIZE = 24;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { categorie } = await params;
@@ -45,7 +48,7 @@ const SORTS = [
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { categorie } = await params;
-  const { tri = "", dispo = "", promo = "" } = await searchParams;
+  const { tri = "", dispo = "", promo = "", page = "1" } = await searchParams;
 
   const [all, allCats, navCats] = await Promise.all([
     getProducts(),
@@ -77,6 +80,23 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   const link = (t: string, d: string, pr: string) =>
     `/boutique/${categorie}${t || d || pr ? `?${new URLSearchParams({ ...(t ? { tri: t } : {}), ...(d ? { dispo: d } : {}), ...(pr ? { promo: pr } : {}) })}` : ""}`;
+
+  // Pagination côté serveur — les liens filtres/tri ramènent à la page 1.
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const current = Math.min(Math.max(1, parseInt(page, 10) || 1), totalPages);
+  const pageItems = items.slice(
+    (current - 1) * PAGE_SIZE,
+    current * PAGE_SIZE
+  );
+  const pageHref = (n: number) => {
+    const p = new URLSearchParams();
+    if (tri) p.set("tri", tri);
+    if (dispo) p.set("dispo", dispo);
+    if (promo) p.set("promo", promo);
+    if (n > 1) p.set("page", String(n));
+    const s = p.toString();
+    return `/boutique/${categorie}${s ? `?${s}` : ""}`;
+  };
 
   return (
     <main className="container mx-auto px-4 py-8">
@@ -193,11 +213,18 @@ export default async function CategoryPage({ params, searchParams }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {items.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {pageItems.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          <ShopPagination
+            page={current}
+            totalPages={totalPages}
+            hrefFor={pageHref}
+          />
+        </>
       )}
     </main>
   );

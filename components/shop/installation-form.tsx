@@ -13,6 +13,7 @@ export function InstallationForm({
 }) {
   const [pending, startTransition] = useTransition();
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -25,9 +26,14 @@ export function InstallationForm({
       placeType: String(f.get("placeType")),
       hasKit: f.get("hasKit") === "on",
       description: String(f.get("description") || ""),
+      website: String(f.get("website") || ""),
     };
     startTransition(async () => {
-      await submitInstallation(data);
+      const res = await submitInstallation(data);
+      if (res && "error" in res) {
+        setError(res.error ?? "Données invalides, réessayez.");
+        return;
+      }
       setSent(true);
     });
   }
@@ -108,6 +114,18 @@ export function InstallationForm({
           className={inputCls}
         />
       </div>
+
+      {/* Honeypot anti-spam — invisible pour les humains */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute left-[-9999px] h-0 w-0 opacity-0"
+      />
+
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button
         type="submit"

@@ -4,14 +4,17 @@ import {
   getVisibleCategories,
 } from "@/features/products/queries";
 import { ProductCard } from "@/components/shop/product-card";
+import { ShopPagination } from "@/components/shop/pagination";
 import { SearchX } from "lucide-react";
 
 export const metadata = { title: "Boutique — Pozeidon Engineering SARL" };
 export const dynamic = "force-dynamic";
 
 interface Props {
-  searchParams: Promise<{ q?: string; tri?: string; dispo?: string; promo?: string }>;
+  searchParams: Promise<{ q?: string; tri?: string; dispo?: string; promo?: string; page?: string }>;
 }
+
+const PAGE_SIZE = 24;
 
 const SORTS = [
   { key: "", label: "Pertinence" },
@@ -36,7 +39,7 @@ function hasPromo(p: { price: number; promoPrice?: number | null }) {
 }
 
 export default async function BoutiquePage({ searchParams }: Props) {
-  const { q, tri = "", dispo = "", promo = "" } = await searchParams;
+  const { q, tri = "", dispo = "", promo = "", page = "1" } = await searchParams;
   const query = q?.trim() ?? "";
   const [all, categories] = await Promise.all([
     getProducts(),
@@ -62,6 +65,24 @@ export default async function BoutiquePage({ searchParams }: Props) {
     if (t) p.set("tri", t);
     if (d) p.set("dispo", d);
     if (pr) p.set("promo", pr);
+    const s = p.toString();
+    return `/boutique${s ? `?${s}` : ""}`;
+  };
+
+  // Pagination côté serveur — les liens filtres/tri ramènent à la page 1.
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const current = Math.min(Math.max(1, parseInt(page, 10) || 1), totalPages);
+  const pageItems = products.slice(
+    (current - 1) * PAGE_SIZE,
+    current * PAGE_SIZE
+  );
+  const pageHref = (n: number) => {
+    const p = new URLSearchParams();
+    if (query) p.set("q", query);
+    if (tri) p.set("tri", tri);
+    if (dispo) p.set("dispo", dispo);
+    if (promo) p.set("promo", promo);
+    if (n > 1) p.set("page", String(n));
     const s = p.toString();
     return `/boutique${s ? `?${s}` : ""}`;
   };
@@ -166,11 +187,18 @@ export default async function BoutiquePage({ searchParams }: Props) {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-          {products.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            {pageItems.map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          <ShopPagination
+            page={current}
+            totalPages={totalPages}
+            hrefFor={pageHref}
+          />
+        </>
       )}
     </main>
   );

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { orders, products, promoCodes } from "@/lib/db/schema";
-import { eq, and, like } from "drizzle-orm";
+import { eq, and, like, inArray, sql } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
@@ -29,15 +29,12 @@ const createOrderSchema = z.object({
     .array(
       z.object({
         productId: z.string(),
-        slug: z.string(),
-        name: z.string(),
-        price: z.number().int().positive(),
-        quantity: z.number().int().positive(),
-        image: z.string().optional(),
+        quantity: z.number().int().positive().max(99),
         withInstallation: z.boolean().optional(),
       })
     )
-    .min(1, "Panier vide"),
+    .min(1, "Panier vide")
+    .max(50),
   paymentMethod: z.enum(["mtn_momo", "orange_money", "cash_on_delivery"]),
   promoCode: z.string().optional(),
   // Champ honeypot invisible — rempli uniquement par les bots.
@@ -68,8 +65,51 @@ export async function createOrder(input: unknown) {
     return { ok: true, number: generateOrderNumber() };
   }
 
-  const subtotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
+  // Prix recalculés côté serveur — jamais de confiance au payload client.
+  const ids = [...new Set(data.items.map((i) => i.productId))];
+  const dbProducts = await db
+    .select()
+    .from(products)
+    .where(inArray(products.id, ids));
+  const byId = new Map(dbProducts.map((p) => [p.id, p]));
+
+  const items: {
+    productId: string;
+    slug: string;
+    name: string;
+    price: number;
+    quantity: number;
+    image?: string;
+    withInstallation?: boolean;
+  }[] = [];
+  for (const i of data.items) {
+    const p = byId.get(i.productId);
+    if (!p) {
+      return { error: "Un ou plusieurs articles sont introuvables." };
+    }
+    if (p.status === "out_of_stock" || p.stock <= 0) {
+      return { error: `« ${p.name} » n'est plus disponible.` };
+    }
+    items.push({
+      productId: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: p.promoPrice ?? p.price,
+      quantity: i.quantity,
+      image: (p.images as string[] | null)?.[0],
+      withInstallation: i.withInstallation,
+    });
+  }
+
+  const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const { deliveryCities } = await getTariffs();
+  // Ville inconnue quand des tarifs sont configurés → rejet (sinon port offert).
+  if (
+    Object.keys(deliveryCities).length > 0 &&
+    !(data.city in deliveryCities)
+  ) {
+    return { error: "Ville de livraison invalide." };
+  }
   const deliveryFee = deliveryCities[data.city] ?? 0;
 
   // Code promo : validé côté serveur, remise appliquée sur le sous-total
@@ -96,52 +136,62 @@ export async function createOrder(input: unknown) {
   }
 
   const total = subtotal - discount + deliveryFee;
-  const orderNumber = generateOrderNumber();
 
-  await db.insert(orders).values({
-    id: randomUUID(),
-    number: orderNumber,
-    customerName: data.customerName.trim(),
-    phone: data.phone.replace(/\D/g, ""),
-    whatsapp: data.whatsapp?.replace(/\D/g, "") || null,
-    email: data.email || null,
-    city: data.city,
-    district: data.district.trim(),
-    landmark: data.landmark?.trim() || null,
-    items: data.items,
-    subtotal,
-    deliveryFee,
-    total,
-    paymentMethod: data.paymentMethod as PaymentMethod,
-    promoCode: promoCodeUsed,
-    discount,
-    status: "pending",
-  });
+  // Numéro de commande : aléatoire + contrainte unique → quelques essais
+  // en cas de collision (rare, ~1/10M).
+  let orderNumber = generateOrderNumber();
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await db.insert(orders).values({
+        id: randomUUID(),
+        number: orderNumber,
+        customerName: data.customerName.trim(),
+        phone: data.phone.replace(/\D/g, ""),
+        whatsapp: data.whatsapp?.replace(/\D/g, "") || null,
+        email: data.email || null,
+        city: data.city,
+        district: data.district.trim(),
+        landmark: data.landmark?.trim() || null,
+        items,
+        subtotal,
+        deliveryFee,
+        total,
+        paymentMethod: data.paymentMethod as PaymentMethod,
+        promoCode: promoCodeUsed,
+        discount,
+        status: "pending",
+      });
+      break;
+    } catch (err) {
+      if (attempt >= 2) throw err;
+      orderNumber = generateOrderNumber();
+    }
+  }
 
-  // Décrémenter le stock des articles commandés (borné à 0).
-  // Un article "en stock" qui tombe à 0 passe automatiquement en "épuisé" ;
-  // les articles "sur commande" gardent leur statut.
+  // Décrémenter le stock de façon atomique (borné à 0) — sûr même si deux
+  // commandes simultanées visent le même article. Un article "en stock"
+  // qui tombe à 0 passe automatiquement en "épuisé" ; les articles
+  // "sur commande" gardent leur statut.
   const stockAlerts: { name: string; stock: number }[] = [];
-  for (const item of data.items) {
-    const [p] = await db
-      .select({
-        name: products.name,
-        stock: products.stock,
-        status: products.status,
-      })
-      .from(products)
-      .where(eq(products.id, item.productId));
-    if (!p) continue;
-    const newStock = Math.max(0, p.stock - item.quantity);
+  for (const item of items) {
+    const p = byId.get(item.productId)!;
     await db
       .update(products)
       .set({
-        stock: newStock,
-        ...(newStock === 0 && p.status === "in_stock"
-          ? { status: "out_of_stock" }
-          : {}),
+        stock: sql`max(0, ${products.stock} - ${item.quantity})`,
       })
       .where(eq(products.id, item.productId));
+    const [after] = await db
+      .select({ stock: products.stock })
+      .from(products)
+      .where(eq(products.id, item.productId));
+    const newStock = after?.stock ?? Math.max(0, p.stock - item.quantity);
+    if (newStock === 0 && p.status === "in_stock") {
+      await db
+        .update(products)
+        .set({ status: "out_of_stock" })
+        .where(eq(products.id, item.productId));
+    }
     // Franchissement du seuil vers le bas → alerte stock bas / épuisé
     if (p.stock > LOW_STOCK_THRESHOLD && newStock <= LOW_STOCK_THRESHOLD) {
       stockAlerts.push({ name: p.name, stock: newStock });
@@ -160,7 +210,7 @@ export async function createOrder(input: unknown) {
       district: data.district.trim(),
       total,
       deliveryFee,
-      items: data.items,
+      items,
       paymentLabel: PAYMENT_LABELS[data.paymentMethod] ?? data.paymentMethod,
     });
   }
@@ -171,7 +221,7 @@ export async function createOrder(input: unknown) {
     customerName: data.customerName.trim(),
     city: data.city,
     total,
-    itemCount: data.items.reduce((s, i) => s + i.quantity, 0),
+    itemCount: items.reduce((s, i) => s + i.quantity, 0),
   });
 
   revalidateTag("products", "max");
