@@ -30,6 +30,7 @@ export function ReviewForm({ productId }: { productId: string }) {
         name: String(d.get("name") ?? ""),
         rating,
         text: String(d.get("text") ?? ""),
+        website: String(d.get("website") ?? ""),
       });
       if (res.error) {
         toast.add({ title: "Erreur", description: res.error, type: "error" });
@@ -50,6 +51,15 @@ export function ReviewForm({ productId }: { productId: string }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
+      {/* Honeypot anti-spam — invisible pour les humains, les bots le remplissent */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute h-0 w-0 opacity-0"
+      />
       <div
         className="flex gap-1"
         role="radiogroup"

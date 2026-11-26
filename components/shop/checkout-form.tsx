@@ -100,6 +100,7 @@ export function CheckoutForm({
         items,
         paymentMethod: payment,
         promoCode: promo?.code,
+        website: String(fd.get("website") ?? ""),
       });
 
       if ("error" in result && result.error) {
@@ -119,6 +120,15 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1fr_340px]">
+      {/* Honeypot anti-spam — invisible pour les humains, les bots le remplissent */}
+      <input
+        type="text"
+        name="website"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="absolute h-0 w-0 opacity-0"
+      />
       {/* Formulaire */}
       <div className="space-y-6">
         <section className="rounded-lg border bg-card p-5">

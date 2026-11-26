@@ -24,6 +24,7 @@ const checkoutSchema = z.object({
     .min(1),
   paymentMethod: z.enum(["mtn_momo", "orange_money", "cash_on_delivery"]),
   promoCode: z.string().optional(),
+  website: z.string().optional(),
 });
 
 export async function POST(request: Request) {
@@ -75,6 +76,7 @@ export async function POST(request: Request) {
     landmark: parsed.data.landmark,
     items: items.filter((i): i is NonNullable<typeof i> => i !== null),
     paymentMethod: parsed.data.paymentMethod,
+    website: parsed.data.website,
   });
 
   if ("error" in result) {

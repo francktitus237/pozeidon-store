@@ -6,6 +6,38 @@ import { formatPrice, SITE_NAME } from "@/lib/constants";
 import { getEmailConfig } from "@/lib/settings";
 import { getBaseUrl } from "@/lib/site";
 
+// Envoi Resend — renvoie false si désactivé ou en échec (jamais bloquant).
+async function send(to: string, subject: string, html: string) {
+  const cfg = await getEmailConfig();
+  if (!cfg.orderConfirmationEnabled || !cfg.resendApiKey) return false;
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${cfg.resendApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: `${SITE_NAME} <${cfg.fromEmail}>`,
+      to: [to],
+      subject,
+      html,
+    }),
+  });
+  if (!res.ok) {
+    console.error("[email] resend error", res.status, await res.text());
+    return false;
+  }
+  return true;
+}
+
+function shell(inner: string) {
+  return `
+    <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1B1F5C">
+      ${inner}
+      <p style="font-size:12px;color:#888">— ${SITE_NAME}</p>
+    </div>`;
+}
+
 export interface OrderEmailPayload {
   number: string;
   customerName: string;
@@ -20,9 +52,6 @@ export interface OrderEmailPayload {
 
 export async function sendOrderConfirmationEmail(order: OrderEmailPayload) {
   try {
-    const cfg = await getEmailConfig();
-    if (!cfg.orderConfirmationEnabled || !cfg.resendApiKey) return;
-
     const base = getBaseUrl();
     const itemRows = order.items
       .map(
@@ -32,8 +61,7 @@ export async function sendOrderConfirmationEmail(order: OrderEmailPayload) {
       )
       .join("");
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1B1F5C">
+    const html = shell(`
         <h1 style="font-size:20px">Merci pour votre commande, ${order.customerName.split(" ")[0]} !</h1>
         <p>Votre commande <strong>${order.number}</strong> a bien été enregistrée.
         ${SITE_NAME} vous contactera pour la livraison à <strong>${order.district}, ${order.city}</strong>.</p>
@@ -42,27 +70,69 @@ export async function sendOrderConfirmationEmail(order: OrderEmailPayload) {
         <strong>Total : ${formatPrice(order.total)}</strong><br/>Paiement : ${order.paymentLabel}</p>
         <p style="font-size:13px">Suivez votre commande ici :
           <a href="${base}/compte" style="color:#0284c7">${base}/compte</a>
-          (numéro ${order.number} + votre numéro de téléphone).</p>
-        <p style="font-size:12px;color:#888">— ${SITE_NAME}</p>
-      </div>`;
+          (numéro ${order.number} + votre numéro de téléphone).</p>`);
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${cfg.resendApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: `${SITE_NAME} <${cfg.fromEmail}>`,
-        to: [order.email],
-        subject: `Commande ${order.number} confirmée — ${SITE_NAME}`,
-        html,
-      }),
-    });
-    if (!res.ok) {
-      console.error("[email] resend error", res.status, await res.text());
-    }
+    await send(
+      order.email,
+      `Commande ${order.number} confirmée — ${SITE_NAME}`,
+      html
+    );
   } catch (err) {
     console.error("[email] order confirmation failed", err);
+  }
+}
+
+export interface OrderStatusEmailPayload {
+  number: string;
+  customerName: string;
+  email: string;
+  city: string;
+  total: number;
+  paymentLabel: string;
+}
+
+const STATUS_MESSAGES: Record<string, { subject: string; line: string }> = {
+  confirmed: {
+    subject: "confirmée",
+    line: "est <strong>confirmée</strong> ! Nous préparons votre livraison.",
+  },
+  preparing: {
+    subject: "en préparation",
+    line: "est <strong>en préparation</strong>. Livraison très bientôt — restez joignable.",
+  },
+  delivered: {
+    subject: "livrée",
+    line: "a été <strong>livrée</strong>. Merci pour votre confiance !",
+  },
+  cancelled: {
+    subject: "annulée",
+    line: "a été <strong>annulée</strong>. Contactez-nous pour toute question ou pour commander à nouveau.",
+  },
+};
+
+// Email au client quand l'admin change le statut de sa commande.
+export async function sendOrderStatusEmail(
+  order: OrderStatusEmailPayload,
+  status: string
+) {
+  const tpl = STATUS_MESSAGES[status];
+  if (!tpl) return;
+  try {
+    const base = getBaseUrl();
+    const html = shell(`
+        <h1 style="font-size:20px">Bonjour ${order.customerName.split(" ")[0]},</h1>
+        <p>Votre commande <strong>${order.number}</strong> ${tpl.line}</p>
+        <p style="font-size:14px">Total : <strong>${formatPrice(order.total)}</strong> · Paiement : ${order.paymentLabel} · Livraison : ${order.city}</p>
+        <p style="font-size:13px">Suivez votre commande ici :
+          <a href="${base}/compte" style="color:#0284c7">${base}/compte</a>
+          (numéro ${order.number} + votre numéro de téléphone).</p>`);
+
+    await send(
+      order.email,
+      `Commande ${order.number} ${tpl.subject} — ${SITE_NAME}`,
+      html
+    );
+  } catch (err) {
+    console.error("[email] status notification failed", err);
   }
 }

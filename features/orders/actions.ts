@@ -9,7 +9,10 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 import { getTariffs } from "@/lib/settings";
 import { sendOrderPush, sendStockAlertPush } from "@/lib/push";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import {
+  sendOrderConfirmationEmail,
+  sendOrderStatusEmail,
+} from "@/lib/email";
 import { LOW_STOCK_THRESHOLD } from "@/lib/constants";
 import type { OrderStatus, PaymentMethod } from "@/types";
 
@@ -36,6 +39,8 @@ const createOrderSchema = z.object({
     .min(1, "Panier vide"),
   paymentMethod: z.enum(["mtn_momo", "orange_money", "cash_on_delivery"]),
   promoCode: z.string().optional(),
+  // Champ honeypot invisible — rempli uniquement par les bots.
+  website: z.string().optional(),
 });
 
 const PAYMENT_LABELS: Record<string, string> = {
@@ -55,6 +60,12 @@ export async function createOrder(input: unknown) {
     return { error: "Données invalides, vérifiez le formulaire." };
   }
   const data = parsed.data;
+
+  // Anti-spam : le honeypot rempli = bot → faux succès sans écrire en base
+  // (pas de stock décrémenté, pas de push, pas de commande).
+  if (data.website?.trim()) {
+    return { ok: true, number: generateOrderNumber() };
+  }
 
   const subtotal = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
   const { deliveryCities } = await getTariffs();
@@ -200,7 +211,28 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
   const session = await auth();
   if (!session) throw new Error("Non authentifié");
 
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.id, id));
   await db.update(orders).set({ status }).where(eq(orders.id, id));
+
+  // Email au client si son statut a changé et qu'il a laissé une adresse
+  // (silencieux : l'échec email ne bloque jamais le changement de statut).
+  if (order?.email && order.status !== status) {
+    await sendOrderStatusEmail(
+      {
+        number: order.number,
+        customerName: order.customerName,
+        email: order.email,
+        city: order.city,
+        total: order.total,
+        paymentLabel: PAYMENT_LABELS[order.paymentMethod] ?? order.paymentMethod,
+      },
+      status
+    );
+  }
+
   revalidatePath("/gestion/commandes");
   revalidatePath("/gestion/statistiques");
 }

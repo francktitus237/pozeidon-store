@@ -13,6 +13,8 @@ const reviewSchema = z.object({
   name: z.string().min(2, "Nom requis").max(80),
   rating: z.number().int().min(1).max(5),
   text: z.string().min(5, "Avis trop court").max(1000),
+  // Champ honeypot invisible — rempli uniquement par les bots.
+  website: z.string().optional(),
 });
 
 // Soumission publique — l'avis reste invisible tant qu'il n'est pas approuvé
@@ -21,6 +23,10 @@ export async function submitReview(input: unknown) {
   const parsed = reviewSchema.safeParse(input);
   if (!parsed.success) {
     return { error: "Avis invalide, vérifiez le formulaire." };
+  }
+  // Anti-spam : honeypot rempli = bot → faux succès sans écrire en base.
+  if (parsed.data.website?.trim()) {
+    return { ok: true };
   }
   try {
     const [p] = await db
