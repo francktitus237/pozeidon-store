@@ -1,4 +1,12 @@
-import { Wrench, ClipboardCheck, MapPin, CalendarCheck } from "lucide-react";
+import {
+  Wrench,
+  ClipboardCheck,
+  MapPin,
+  CalendarCheck,
+  MessageCircle,
+  Clock,
+  ShieldCheck,
+} from "lucide-react";
 import { InstallationForm } from "@/components/shop/installation-form";
 import { getContact } from "@/lib/settings";
 
@@ -115,16 +123,54 @@ export default async function InstallationPage() {
           </div>
         </section>
 
-        {/* Formulaire */}
-        <section className="mx-auto w-full max-w-2xl">
-          <h2 className="mb-1 text-xl font-bold text-navy-900">
-            Demander un devis gratuit
-          </h2>
-          <p className="mb-5 text-sm text-muted-foreground">
-            Décrivez votre besoin — nous vous rappelons sous 24 h. Vous pouvez
-            aussi nous écrire sur WhatsApp au {contact.phone}.
-          </p>
-          <InstallationForm whatsapp={contact.whatsapp} />
+        {/* Formulaire + réassurance */}
+        <section className="grid gap-6 lg:grid-cols-3">
+          {/* Colonne réassurance */}
+          <aside className="flex flex-col gap-4 lg:col-span-1">
+            <div className="rounded-lg border bg-card p-5">
+              <h2 className="text-xl font-bold text-navy-900">
+                Demander un devis gratuit
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Décrivez votre besoin — un technicien vous rappelle sous 24 h.
+              </p>
+              <ul className="mt-4 space-y-2.5 text-sm">
+                <li className="flex items-center gap-2.5">
+                  <Clock className="h-4 w-4 shrink-0 text-sky-600" />
+                  Réponse garantie sous 24 h ouvrées
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-sky-600" />
+                  Devis gratuit et sans engagement
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <Wrench className="h-4 w-4 shrink-0 text-sky-600" />
+                  Techniciens formés à la pose Starlink
+                </li>
+                <li className="flex items-center gap-2.5">
+                  <MapPin className="h-4 w-4 shrink-0 text-sky-600" />
+                  Douala, Yaoundé et alentours
+                </li>
+              </ul>
+            </div>
+            <a
+              href={`https://wa.me/${contact.whatsapp}?text=${encodeURIComponent("Bonjour, je souhaite un devis d'installation Starlink.")}`}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center justify-center gap-2 rounded-lg bg-whatsapp-500 px-5 py-3 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Ou écrivez-nous directement
+            </a>
+            <p className="text-center text-xs text-muted-foreground">
+              {contact.phone} — réponse rapide 7j/7
+            </p>
+          </aside>
+
+          {/* Carte formulaire */}
+          <div className="rounded-lg border bg-card p-5 shadow-sm sm:p-7 lg:col-span-2">
+            <InstallationForm whatsapp={contact.whatsapp} />
+          </div>
         </section>
       </div>
     </main>
