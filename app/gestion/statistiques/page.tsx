@@ -22,10 +22,11 @@ export default async function AdminStatsPage() {
     (o) => o.status === "delivered"
   ).length;
   const pendingOrders = allOrders.filter((o) => o.status === "pending").length;
-  const revenue = allOrders
-    .filter((o) => o.status !== "cancelled")
-    .reduce((sum, o) => sum + o.total, 0);
-  const avgOrder = allOrders.length ? Math.round(revenue / allOrders.length) : 0;
+  const validOrders = allOrders.filter((o) => o.status !== "cancelled");
+  const revenue = validOrders.reduce((sum, o) => sum + o.total, 0);
+  const avgOrder = validOrders.length
+    ? Math.round(revenue / validOrders.length)
+    : 0;
 
   const byStatus = [
     { label: "En attente", count: pendingOrders },
@@ -150,7 +151,7 @@ export default async function AdminStatsPage() {
             {formatPrice(avgOrder)}
           </p>
           <p className="text-sm text-muted-foreground">
-            Sur {allOrders.length} commande(s)
+            Sur {validOrders.length} commande(s) non annulée(s)
           </p>
           <ul className="mt-4 space-y-1.5 border-t pt-3 text-sm">
             {byStatus.map((s) => (
