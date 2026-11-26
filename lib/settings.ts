@@ -421,9 +421,18 @@ export async function getEmailConfig(): Promise<EmailConfig> {
 
 export interface AiConfig {
   geminiApiKey: string;
+  // Modèles Gemini — les anciens (gemini-2.0-flash) sont retirés par Google.
+  model: string;
+  ttsModel: string;
+  ttsVoice: string;
 }
 
-const DEFAULT_AI: AiConfig = { geminiApiKey: "" };
+const DEFAULT_AI: AiConfig = {
+  geminiApiKey: "",
+  model: "gemini-3.5-flash-lite",
+  ttsModel: "gemini-2.5-flash-preview-tts",
+  ttsVoice: "Aoede",
+};
 
 export async function getAiConfig(): Promise<AiConfig> {
   try {
@@ -433,6 +442,18 @@ export async function getAiConfig(): Promise<AiConfig> {
     return {
       geminiApiKey:
         typeof parsed.geminiApiKey === "string" ? parsed.geminiApiKey : "",
+      model:
+        typeof parsed.model === "string" && parsed.model
+          ? parsed.model
+          : DEFAULT_AI.model,
+      ttsModel:
+        typeof parsed.ttsModel === "string" && parsed.ttsModel
+          ? parsed.ttsModel
+          : DEFAULT_AI.ttsModel,
+      ttsVoice:
+        typeof parsed.ttsVoice === "string" && parsed.ttsVoice
+          ? parsed.ttsVoice
+          : DEFAULT_AI.ttsVoice,
     };
   } catch {
     return DEFAULT_AI;

@@ -1,13 +1,40 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, X, Send, Loader2, MessageCircle } from "lucide-react";
+import { Bot, X, Send, Loader2, MessageCircle, Volume2 } from "lucide-react";
 import {
   askAssistant,
+  speakAssistant,
   type ChatTurn,
 } from "@/features/assistant/actions";
 
 type Msg = ChatTurn;
+
+// Enrobe le PCM 16 bits mono de Gemini TTS dans un en-tête WAV jouable.
+function pcmToWav(base64: string, sampleRate = 24000): Blob {
+  const raw = atob(base64);
+  const pcm = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) pcm[i] = raw.charCodeAt(i);
+  const header = new ArrayBuffer(44);
+  const v = new DataView(header);
+  const str = (o: number, s: string) => {
+    for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i));
+  };
+  str(0, "RIFF");
+  v.setUint32(4, 36 + pcm.length, true);
+  str(8, "WAVE");
+  str(12, "fmt ");
+  v.setUint32(16, 16, true); // bloc fmt
+  v.setUint16(20, 1, true); // PCM
+  v.setUint16(22, 1, true); // mono
+  v.setUint32(24, sampleRate, true);
+  v.setUint32(28, sampleRate * 2, true);
+  v.setUint16(32, 2, true); // alignement
+  v.setUint16(34, 16, true); // bits
+  str(36, "data");
+  v.setUint32(40, pcm.length, true);
+  return new Blob([header, pcm], { type: "audio/wav" });
+}
 
 const WELCOME: Msg = {
   role: "model",
@@ -19,7 +46,9 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
   const [msgs, setMsgs] = useState<Msg[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [speaking, setSpeaking] = useState<number | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
@@ -39,6 +68,33 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
         ? `Désolé : ${res.error} Vous pouvez aussi nous écrire sur WhatsApp.`
         : (res as { ok: true; text: string }).text;
     setMsgs([...next, { role: "model", text: reply }]);
+  }
+
+  async function speak(i: number, text: string) {
+    if (speaking !== null) return;
+    setSpeaking(i);
+    audioRef.current?.pause();
+    const res = await speakAssistant(text);
+    if ("ok" in res && res.ok && "audio" in res) {
+      // gemini-2.5-…-tts renvoie du PCM brut (à enrober en WAV) ;
+      // les modèles récents renvoient déjà du WAV.
+      const blob = res.mimeType?.includes("wav")
+        ? new Blob(
+            [Uint8Array.from(atob(res.audio), (c) => c.charCodeAt(0))],
+            { type: "audio/wav" }
+          )
+        : pcmToWav(res.audio);
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => {
+        URL.revokeObjectURL(url);
+        setSpeaking(null);
+      };
+      await audio.play().catch(() => setSpeaking(null));
+    } else {
+      setSpeaking(null);
+    }
   }
 
   return (
@@ -91,7 +147,22 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
                     : "self-start rounded-bl-sm border bg-white text-navy-900 shadow-sm"
                 }`}
               >
-                {m.text}
+                <span>{m.text}</span>
+                {m.role === "model" && (
+                  <button
+                    type="button"
+                    onClick={() => speak(i, m.text)}
+                    aria-label="Écouter la réponse"
+                    className="ml-1.5 inline-flex translate-y-0.5 text-sky-600 hover:text-sky-800 disabled:opacity-40"
+                    disabled={speaking !== null && speaking !== i}
+                  >
+                    {speaking === i ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Volume2 className="h-3.5 w-3.5" />
+                    )}
+                  </button>
+                )}
               </div>
             ))}
             {loading && (

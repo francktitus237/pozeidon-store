@@ -201,7 +201,12 @@ export async function updateAiConfig(data: AiConfig) {
   const session = await auth();
   if (!session) throw new Error("Non authentifié");
 
-  const clean = { geminiApiKey: data.geminiApiKey.trim() };
+  const clean: AiConfig = {
+    geminiApiKey: data.geminiApiKey.trim(),
+    model: data.model?.trim() || "gemini-3.5-flash-lite",
+    ttsModel: data.ttsModel?.trim() || "gemini-2.5-flash-preview-tts",
+    ttsVoice: data.ttsVoice?.trim() || "Aoede",
+  };
   await db
     .insert(settings)
     .values({

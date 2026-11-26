@@ -14,7 +14,7 @@ export async function generateProductDescription(input: {
   const session = await auth();
   if (!session) return { error: "Non authentifié" };
 
-  const { geminiApiKey } = await getAiConfig();
+  const { geminiApiKey, model } = await getAiConfig();
   if (!geminiApiKey) {
     return {
       error:
@@ -38,7 +38,7 @@ export async function generateProductDescription(input: {
 
   try {
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: {

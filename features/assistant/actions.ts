@@ -24,7 +24,7 @@ export interface ChatTurn {
 }
 
 export async function askAssistant(message: string, history: ChatTurn[]) {
-  const { geminiApiKey } = await getAiConfig();
+  const { geminiApiKey, model } = await getAiConfig();
   if (!geminiApiKey) return { error: "Assistant indisponible pour le moment." };
 
   const text = message.trim().slice(0, MAX_MSG);
@@ -80,7 +80,7 @@ export async function askAssistant(message: string, history: ChatTurn[]) {
 
   try {
     const res = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       {
         method: "POST",
         headers: {
@@ -107,5 +107,58 @@ export async function askAssistant(message: string, history: ChatTurn[]) {
     return { ok: true, text: out };
   } catch {
     return { error: "Connexion impossible — réessayez dans un instant." };
+  }
+}
+
+// Synthèse vocale d'une réponse — Gemini TTS renvoie du PCM 24 kHz mono
+// 16 bits en base64 ; le client l'enrobe dans un en-tête WAV pour lecture.
+export async function speakAssistant(text: string) {
+  const { geminiApiKey, ttsModel, ttsVoice } = await getAiConfig();
+  if (!geminiApiKey) return { error: "Voix indisponible pour le moment." };
+
+  const input = text.trim().slice(0, 800);
+  if (!input) return { error: "Rien à lire." };
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${ttsModel}:generateContent`,
+      {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": geminiApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Texte direct, sans consigne : le préfixe d'instruction déclenche
+          // un finishReason OTHER sans audio chez les modèles TTS.
+          contents: [{ parts: [{ text: input }] }],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: ttsVoice },
+              },
+            },
+          },
+        }),
+      }
+    );
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[assistant] tts error", res.status, body);
+      return { error: `Voix indisponible (${res.status}).` };
+    }
+    const json = (await res.json()) as {
+      candidates?: {
+        content?: {
+          parts?: { inlineData?: { data?: string; mimeType?: string } }[];
+        };
+      }[];
+    };
+    const part = json.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!part?.data) return { error: "Pas d'audio — réessayez." };
+    return { ok: true, audio: part.data, mimeType: part.mimeType ?? "audio/L16;rate=24000" };
+  } catch {
+    return { error: "Connexion impossible — réessayez." };
   }
 }
