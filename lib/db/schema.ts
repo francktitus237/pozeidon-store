@@ -61,6 +61,20 @@ export const newsletterSubscribers = pgTable("newsletter_subscribers", {
     .defaultNow(),
 });
 
+// Clients à prévenir quand un article épuisé revient en stock.
+export const stockAlerts = pgTable("stock_alerts", {
+  id: text("id").primaryKey(),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  notifiedAt: timestamp("notified_at"),
+  createdAt: timestamp("created_at")
+    .notNull()
+    .defaultNow(),
+});
+
 export const promoCodes = pgTable("promo_codes", {
   id: text("id").primaryKey(),
   code: text("code").notNull().unique(),

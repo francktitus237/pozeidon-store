@@ -1,13 +1,14 @@
 "use client";
 
-import { useTransition } from "react";
-import { Download, Trash2 } from "lucide-react";
+import { useRef, useTransition } from "react";
+import { Download, Mail, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { toDate } from "@/lib/dates";
 import {
   deleteSubscriber,
+  sendNewsletterCampaign,
   updateNewsletterConfig,
 } from "@/features/newsletter/actions";
 import { PaginatedTable } from "@/components/admin/paginated-table";
@@ -21,6 +22,28 @@ export function NewsletterManager({
   welcomeCode: string;
 }) {
   const [pending, startTransition] = useTransition();
+  const campaignForm = useRef<HTMLFormElement>(null);
+
+  function onSendCampaign(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const res = await sendNewsletterCampaign({
+        subject: fd.get("subject"),
+        body: fd.get("body"),
+      });
+      if (res.error) {
+        toast.add({ title: "Envoi impossible", description: res.error, type: "error" });
+      } else {
+        toast.add({
+          title: "Campagne envoyée",
+          description: `${res.sent}/${res.total} emails distribués.`,
+          type: "success",
+        });
+        campaignForm.current?.reset();
+      }
+    });
+  }
 
   function onSaveWelcome(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -119,6 +142,48 @@ export function NewsletterManager({
         >
           Enregistrer
         </Button>
+      </form>
+
+      {/* Campagne : email groupé à tous les abonnés */}
+      <form
+        ref={campaignForm}
+        onSubmit={onSendCampaign}
+        className="flex flex-col gap-3 rounded-lg border bg-card p-4"
+      >
+        <div className="flex items-center gap-2">
+          <Mail className="h-4 w-4 text-sky-600" />
+          <p className="text-sm font-semibold text-navy-900">
+            Envoyer une campagne aux {rows.length} abonné
+            {rows.length > 1 ? "s" : ""}
+          </p>
+        </div>
+        <Input
+          name="subject"
+          placeholder="Objet — ex : -20% sur les kits Starlink cette semaine"
+          required
+          maxLength={120}
+        />
+        <textarea
+          name="body"
+          rows={5}
+          required
+          placeholder="Votre message… (un lien « Se désinscrire » est ajouté automatiquement)"
+          className="w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        />
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-xs text-muted-foreground">
+            Nécessite la clé Resend (Réglages → Emails). Max 95 destinataires
+            par campagne.
+          </p>
+          <Button
+            type="submit"
+            disabled={pending || !rows.length}
+            className="bg-cta-500 text-white hover:bg-cta-600"
+          >
+            <Mail className="h-4 w-4" />
+            {pending ? "Envoi…" : "Envoyer la campagne"}
+          </Button>
+        </div>
       </form>
 
       {rows.length === 0 ? (

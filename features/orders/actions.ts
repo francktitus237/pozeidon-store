@@ -315,6 +315,39 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
     .where(eq(orders.id, id));
   await db.update(orders).set({ status }).where(eq(orders.id, id));
 
+  // Stock : le décrément a eu lieu à la commande → l'annulation doit le
+  // rendre, et repasser un article "épuisé" en "en stock" s'il repasse >0.
+  // Symétriquement, dés-annuler réserve à nouveau les articles.
+  if (order && order.status !== status) {
+    const items = order.items as { productId: string; quantity: number }[];
+    const cancelling = status === "cancelled";
+    const uncancelling = order.status === "cancelled" && !cancelling;
+    if (cancelling || uncancelling) {
+      for (const item of items) {
+        const delta = cancelling ? item.quantity : -item.quantity;
+        const [after] = await db
+          .update(products)
+          .set({ stock: sql`max(0, ${products.stock} + ${delta})` })
+          .where(eq(products.id, item.productId))
+          .returning({ stock: products.stock, status: products.status });
+        if (after) {
+          if (after.stock > 0 && after.status === "out_of_stock") {
+            await db
+              .update(products)
+              .set({ status: "in_stock" })
+              .where(eq(products.id, item.productId));
+          } else if (after.stock === 0 && after.status === "in_stock") {
+            await db
+              .update(products)
+              .set({ status: "out_of_stock" })
+              .where(eq(products.id, item.productId));
+          }
+        }
+      }
+      revalidateTag("products", "max");
+    }
+  }
+
   // Email au client si son statut a changé et qu'il a laissé une adresse
   // (silencieux : l'échec email ne bloque jamais le changement de statut).
   if (order?.email && order.status !== status) {

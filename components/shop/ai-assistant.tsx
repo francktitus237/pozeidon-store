@@ -41,6 +41,15 @@ const WELCOME: Msg = {
   text: "Bonjour ! Je suis l'assistant Pozeidon. Posez-moi vos questions sur nos produits, les prix ou la livraison.",
 };
 
+// Questions proposées au premier contact — orientent le client vers
+// ce que l'assistant sait vraiment faire.
+const SUGGESTIONS = [
+  "Quelles sont les nouveautés ?",
+  "Quels sont vos meilleurs produits ?",
+  "Vous livrez dans quelles villes ?",
+  "Comment suivre ma commande ?",
+];
+
 export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([WELCOME]);
@@ -49,11 +58,16 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
   const [speaking, setSpeaking] = useState<number | null>(null);
   const [hint, setHint] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [msgs, loading]);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
 
   // Bulle d'accroche : après 5 s, invite le visiteur à poser sa question.
   // Affichée une seule fois par session, disparaît toute seule au bout de 12 s.
@@ -78,8 +92,8 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
     return () => clearTimeout(t);
   }, [hint]);
 
-  async function send() {
-    const text = input.trim();
+  async function send(override?: string) {
+    const text = (override ?? input).trim();
     if (!text || loading) return;
     setInput("");
     const next = [...msgs, { role: "user" as const, text }];
@@ -210,10 +224,33 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
                 )}
               </div>
             ))}
+            {/* Suggestions au premier échange */}
+            {msgs.length === 1 && !loading && (
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => send(s)}
+                    className="rounded-full border border-sky-300 bg-white px-3 py-1.5 text-xs font-medium text-sky-700 transition hover:border-sky-500 hover:bg-sky-50"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {loading && (
-              <div className="flex items-center gap-1.5 self-start rounded-2xl rounded-bl-sm border bg-white px-3.5 py-2.5 text-muted-foreground shadow-sm">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span className="text-xs">…</span>
+              <div className="flex items-center gap-1.5 self-start rounded-2xl rounded-bl-sm border bg-white px-3.5 py-3 text-muted-foreground shadow-sm">
+                <span className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-sky-500"
+                      style={{ animationDelay: `${i * 150}ms` }}
+                    />
+                  ))}
+                </span>
               </div>
             )}
           </div>
@@ -221,6 +258,7 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
           {/* Saisie */}
           <div className="flex items-center gap-2 border-t bg-background p-2.5">
             <input
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && send()}
@@ -230,7 +268,7 @@ export function AiAssistant({ whatsapp }: { whatsapp?: string }) {
             />
             <button
               type="button"
-              onClick={send}
+              onClick={() => send()}
               disabled={loading || !input.trim()}
               aria-label="Envoyer"
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cta-500 text-white transition hover:bg-cta-600 disabled:opacity-40"

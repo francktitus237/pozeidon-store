@@ -105,6 +105,14 @@ sqlite.exec(`
     email TEXT NOT NULL UNIQUE,
     created_at INTEGER NOT NULL DEFAULT (unixepoch())
   );
+  CREATE TABLE IF NOT EXISTS stock_alerts (
+    id TEXT PRIMARY KEY,
+    product_id TEXT NOT NULL REFERENCES products(id),
+    phone TEXT NOT NULL,
+    email TEXT,
+    notified_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  );
 `);
 
 // Ajout des colonnes apparues après la première version (bases existantes)

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductActions } from "@/components/shop/product-actions";
 import { WishlistButton } from "@/components/shop/wishlist-button";
 import { ProductCard } from "@/components/shop/product-card";
+import { StockAlertForm } from "@/components/shop/stock-alert-form";
 import { Reveal } from "@/components/reveal";
 import { ProductReviews } from "@/components/shop/product-reviews";
 import { RecentlyViewed } from "@/components/shop/recently-viewed";
@@ -197,6 +198,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
               {product.description}
             </p>
           )}
+
+          {isOut && <StockAlertForm productId={product.id} />}
 
           <div className="flex items-start gap-2">
             <div className="flex-1">

@@ -4,6 +4,7 @@
 
 import { db } from "@/lib/db";
 import { products } from "@/lib/db/schema";
+import { notifyBackInStock } from "@/features/stock-alerts/actions";
 import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
@@ -120,6 +121,18 @@ export async function updateProduct(id: string, data: ProductFormData) {
       installationAvailable: data.installationAvailable,
     })
     .where(eq(products.id, id));
+
+  // Retour en stock → prévient les clients inscrits sur la fiche
+  // (emails auto + marque les alertes « notifiées »).
+  if (data.status === "in_stock" && data.stock > 0) {
+    const [p] = await db
+      .select({ slug: products.slug })
+      .from(products)
+      .where(eq(products.id, id));
+    if (p) {
+      await notifyBackInStock(id, data.name, p.slug, data.price);
+    }
+  }
 
   let social: SocialPublishResult[] | undefined;
   if (data.shareFacebook || data.shareInstagram) {

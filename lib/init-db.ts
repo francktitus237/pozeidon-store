@@ -123,6 +123,15 @@ export async function initPostgres() {
         email TEXT NOT NULL UNIQUE,
         created_at TIMESTAMP NOT NULL DEFAULT now()
       )`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS stock_alerts (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL REFERENCES products(id),
+        phone TEXT NOT NULL,
+        email TEXT,
+        notified_at TIMESTAMP,
+        created_at TIMESTAMP NOT NULL DEFAULT now()
+      )`;
     // Fichiers uploadés stockés en base (base64) : persiste sans volume Docker
     await sql`
       CREATE TABLE IF NOT EXISTS files (

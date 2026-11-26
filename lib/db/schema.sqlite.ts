@@ -59,6 +59,19 @@ export const newsletterSubscribers = sqliteTable("newsletter_subscribers", {
     .$defaultFn(() => new Date()),
 });
 
+export const stockAlerts = sqliteTable("stock_alerts", {
+  id: text("id").primaryKey(),
+  productId: text("product_id")
+    .notNull()
+    .references(() => products.id),
+  phone: text("phone").notNull(),
+  email: text("email"),
+  notifiedAt: integer("notified_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});
+
 export const promoCodes = sqliteTable("promo_codes", {
   id: text("id").primaryKey(),
   code: text("code").notNull().unique(),

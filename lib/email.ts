@@ -10,14 +10,40 @@ import { getBaseUrl } from "@/lib/site";
 async function send(to: string, subject: string, html: string) {
   const cfg = await getEmailConfig();
   if (!cfg.orderConfirmationEnabled || !cfg.resendApiKey) return false;
+  return resend(cfg.resendApiKey, cfg.fromEmail, to, subject, html);
+}
+
+// Envoi marketing (newsletter, alertes stock) : dépend de la clé seule,
+// pas de l'interrupteur des emails de commande.
+export async function sendMarketing(
+  to: string,
+  subject: string,
+  html: string
+) {
+  try {
+    const cfg = await getEmailConfig();
+    if (!cfg.resendApiKey) return false;
+    return await resend(cfg.resendApiKey, cfg.fromEmail, to, subject, html);
+  } catch {
+    return false;
+  }
+}
+
+async function resend(
+  apiKey: string,
+  fromEmail: string,
+  to: string,
+  subject: string,
+  html: string
+) {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${cfg.resendApiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: `${SITE_NAME} <${cfg.fromEmail}>`,
+      from: `${SITE_NAME} <${fromEmail}>`,
       to: [to],
       subject,
       html,
@@ -30,7 +56,7 @@ async function send(to: string, subject: string, html: string) {
   return true;
 }
 
-function shell(inner: string) {
+export function shell(inner: string) {
   return `
     <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;color:#1B1F5C">
       ${inner}

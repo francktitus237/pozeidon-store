@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Star,
   Mail,
+  Bell,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import Image from "next/image";
@@ -32,6 +33,7 @@ const ITEMS = [
   { href: "/gestion/avis", icon: Star, label: "Avis clients", badgeKey: "reviews" },
   { href: "/gestion/promos", icon: Tag, label: "Codes promo" },
   { href: "/gestion/newsletter", icon: Mail, label: "Newsletter" },
+  { href: "/gestion/alertes", icon: Bell, label: "Alertes stock" },
   { href: "/gestion/contenu", icon: ImageIcon, label: "Contenu du site" },
   { href: "/gestion/statistiques", icon: BarChart3, label: "Statistiques" },
   { href: "/gestion/comptes", icon: ShieldCheck, label: "Comptes admin" },
