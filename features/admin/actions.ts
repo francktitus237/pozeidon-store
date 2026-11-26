@@ -7,6 +7,10 @@ import { products } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
+import {
+  publishProductToSocial,
+  type SocialPublishResult,
+} from "@/lib/social";
 
 function slugify(text: string) {
   return text
@@ -34,6 +38,9 @@ export interface ProductFormData {
   images: string[];
   videoUrl?: string;
   installationAvailable: boolean;
+  // Publication simultanée sur les réseaux connectés (Réglages → Réseaux sociaux)
+  shareFacebook?: boolean;
+  shareInstagram?: boolean;
 }
 
 export async function createProduct(data: ProductFormData) {
@@ -45,6 +52,7 @@ export async function createProduct(data: ProductFormData) {
     data.reference.trim() ||
     `PZ-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
 
+  const images = [...new Set((data.images ?? []).filter(Boolean))];
   await db.insert(products).values({
     id,
     slug,
@@ -56,15 +64,30 @@ export async function createProduct(data: ProductFormData) {
     stock: data.stock,
     status: data.status,
     categoryId: data.categoryId,
-    images: [...new Set((data.images ?? []).filter(Boolean))],
+    images,
     videoUrl: data.videoUrl || null,
     installationAvailable: data.installationAvailable,
   });
 
+  let social: SocialPublishResult[] | undefined;
+  if (data.shareFacebook || data.shareInstagram) {
+    social = await publishProductToSocial(
+      {
+        name: data.name,
+        slug,
+        description: data.description || null,
+        price: data.price,
+        promoPrice: data.promoPrice || null,
+        images,
+      },
+      { facebook: data.shareFacebook, instagram: data.shareInstagram }
+    );
+  }
+
   revalidateTag("products", "max");
   revalidatePath("/gestion/articles");
   revalidatePath("/");
-  return { ok: true };
+  return { ok: true, social };
 }
 
 export async function updateProduct(id: string, data: ProductFormData) {
@@ -80,6 +103,7 @@ export async function updateProduct(id: string, data: ProductFormData) {
       existing?.reference ??
       `PZ-${id.replace(/-/g, "").slice(0, 6).toUpperCase()}`;
   }
+  const images = [...new Set((data.images ?? []).filter(Boolean))];
   await db
     .update(products)
     .set({
@@ -91,16 +115,37 @@ export async function updateProduct(id: string, data: ProductFormData) {
       stock: data.stock,
       status: data.status,
       categoryId: data.categoryId,
-      images: [...new Set((data.images ?? []).filter(Boolean))],
+      images,
       videoUrl: data.videoUrl || null,
       installationAvailable: data.installationAvailable,
     })
     .where(eq(products.id, id));
 
+  let social: SocialPublishResult[] | undefined;
+  if (data.shareFacebook || data.shareInstagram) {
+    const [p] = await db
+      .select({ slug: products.slug })
+      .from(products)
+      .where(eq(products.id, id));
+    if (p) {
+      social = await publishProductToSocial(
+        {
+          name: data.name,
+          slug: p.slug,
+          description: data.description || null,
+          price: data.price,
+          promoPrice: data.promoPrice || null,
+          images,
+        },
+        { facebook: data.shareFacebook, instagram: data.shareInstagram }
+      );
+    }
+  }
+
   revalidateTag("products", "max");
   revalidatePath("/gestion/articles");
   revalidatePath("/");
-  return { ok: true };
+  return { ok: true, social };
 }
 
 export async function deleteProduct(id: string) {

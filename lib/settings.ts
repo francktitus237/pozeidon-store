@@ -193,6 +193,37 @@ export async function getContact(): Promise<ContactInfo> {
   }
 }
 
+// ── Publication sur les réseaux sociaux (éditable dans Réglages) ──
+// Facebook Page et Instagram Business sont pilotés par la même API Meta
+// (un seul Page Access Token longue durée).
+
+export interface SocialConfig {
+  metaAccessToken: string;
+  facebookPageId: string;
+  facebookEnabled: boolean;
+  instagramUserId: string;
+  instagramEnabled: boolean;
+}
+
+const DEFAULT_SOCIAL: SocialConfig = {
+  metaAccessToken: "",
+  facebookPageId: "",
+  facebookEnabled: false,
+  instagramUserId: "",
+  instagramEnabled: false,
+};
+
+export async function getSocialConfig(): Promise<SocialConfig> {
+  try {
+    const value = await getSettingRow("social");
+    if (!value) return DEFAULT_SOCIAL;
+    const parsed = JSON.parse(value) as Partial<SocialConfig>;
+    return { ...DEFAULT_SOCIAL, ...parsed };
+  } catch {
+    return DEFAULT_SOCIAL;
+  }
+}
+
 // ── Vidéo publicitaire de l'accueil (éditable dans Contenu du site) ──
 
 export interface PromoVideo {

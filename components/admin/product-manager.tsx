@@ -56,9 +56,11 @@ const STATUS_LABEL: Record<string, { label: string; className: string }> = {
 export function ProductManager({
   rows,
   categories,
+  social,
 }: {
   rows: Row[];
   categories: { id: string; name: string }[];
+  social: { facebook: boolean; instagram: boolean };
 }) {
   const PAGE_SIZE = 10;
   const [search, setSearch] = useState("");
@@ -148,15 +150,26 @@ export function ProductManager({
       images: imagePaths,
       videoUrl,
       installationAvailable: f.get("installationAvailable") === "on",
+      shareFacebook: f.get("shareFacebook") === "on",
+      shareInstagram: f.get("shareInstagram") === "on",
     };
     startTransition(async () => {
       try {
-        if (editing) {
-          await updateProduct(editing.id, data);
-          toast.add({ title: "Article mis à jour", description: data.name, type: "success" });
-        } else {
-          await createProduct(data);
-          toast.add({ title: "Article créé", description: data.name, type: "success" });
+        const res = editing
+          ? await updateProduct(editing.id, data)
+          : await createProduct(data);
+        toast.add({
+          title: editing ? "Article mis à jour" : "Article créé",
+          description: data.name,
+          type: "success",
+        });
+        for (const r of res.social ?? []) {
+          const label = r.network === "facebook" ? "Facebook" : "Instagram";
+          toast.add({
+            title: r.ok ? `Publié sur ${label}` : `Échec publication ${label}`,
+            description: r.error,
+            type: r.ok ? "success" : "error",
+          });
         }
         setShowForm(false);
       } catch {
@@ -277,7 +290,7 @@ export function ProductManager({
             </div>
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <label className="text-sm font-medium">
-                Photos — la 1ère est l'image principale
+                Photos — la 1ère est l&apos;image principale
               </label>
               <div className="flex flex-wrap items-center gap-3">
                 {imagePaths.map((src, i) => (
@@ -382,6 +395,32 @@ export function ProductManager({
             />
             Installation disponible avec ce produit
           </label>
+
+          {(social.facebook || social.instagram) && (
+            <div className="flex flex-col gap-2 rounded-md border bg-sky-50 p-3">
+              <p className="text-sm font-medium text-navy-900">
+                Publier aussi sur les réseaux sociaux
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {social.facebook && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="shareFacebook" />
+                    Facebook
+                  </label>
+                )}
+                {social.instagram && (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" name="shareInstagram" />
+                    Instagram
+                  </label>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Un post avec la photo principale, le prix et le lien de la fiche
+                produit sera publié sur les réseaux cochés.
+              </p>
+            </div>
+          )}
 
             <div className="flex gap-3">
               <Button
