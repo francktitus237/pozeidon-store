@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { orders, products, promoCodes } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, like } from "drizzle-orm";
 import { auth } from "@/auth";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { randomUUID } from "crypto";
@@ -14,6 +14,7 @@ import {
   sendOrderStatusEmail,
 } from "@/lib/email";
 import { LOW_STOCK_THRESHOLD } from "@/lib/constants";
+import { toDate } from "@/lib/dates";
 import type { OrderStatus, PaymentMethod } from "@/types";
 
 const createOrderSchema = z.object({
@@ -193,18 +194,65 @@ export async function checkPromo(code: string) {
   return { ok: true, percent: promo.percent, code: promo.code };
 }
 
+// Normalise le numéro saisi : "pze 1234", "PZE1234" ou "1234" → "PZE-1234".
+function normalizeOrderNumber(raw: string): string {
+  const s = raw.trim().toUpperCase().replace(/[\s_]+/g, "");
+  if (s.startsWith("PZE-")) return s;
+  if (s.startsWith("PZE")) return `PZE-${s.slice(3)}`;
+  return `PZE-${s}`;
+}
+
 export async function trackOrder(number: string, phone: string) {
-  const normalizedPhone = phone.replace(/\D/g, "");
+  // Le téléphone stocké est en chiffres ; on tolère le préfixe 237 en
+  // comparant sur les 9 derniers chiffres (format mobile camerounais).
+  const digits = phone.replace(/\D/g, "").slice(-9);
   const [order] = await db
     .select()
     .from(orders)
     .where(
       and(
-        eq(orders.number, number.trim()),
-        eq(orders.phone, normalizedPhone)
+        eq(orders.number, normalizeOrderNumber(number)),
+        like(orders.phone, `%${digits}`)
       )
     );
   return order ?? null;
+}
+
+// Retrouver ses commandes sans le numéro : téléphone + nom (comparaison
+// assouplie — casse, accents et tirets ignorés). Renvoie le minimum
+// nécessaire : numéro, statut, date, total.
+export async function findOrdersByPhone(phone: string, name: string) {
+  const digits = phone.replace(/\D/g, "").slice(-9);
+  if (digits.length < 9) return [];
+  const norm = (s: string) =>
+    s
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z]/g, "");
+  const needle = norm(name);
+  if (!needle) return [];
+
+  const rows = await db
+    .select({
+      number: orders.number,
+      status: orders.status,
+      total: orders.total,
+      createdAt: orders.createdAt,
+      customerName: orders.customerName,
+    })
+    .from(orders)
+    .where(like(orders.phone, `%${digits}`));
+
+  return rows
+    .filter((r) => norm(r.customerName) === needle)
+    .sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
+    .map(({ number, status, total, createdAt }) => ({
+      number,
+      status,
+      total,
+      createdAt,
+    }));
 }
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {

@@ -13,10 +13,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { trackOrder } from "@/features/orders/actions";
+import {
+  trackOrder,
+  findOrdersByPhone,
+} from "@/features/orders/actions";
 import { CONTACT, formatPrice } from "@/lib/constants";
 
 type Order = NonNullable<Awaited<ReturnType<typeof trackOrder>>>;
+type FoundOrder = Awaited<ReturnType<typeof findOrdersByPhone>>[number];
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "En attente",
@@ -46,6 +50,9 @@ export function OrderTracker({
 }) {
   const [number, setNumber] = useState("");
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [forgotMode, setForgotMode] = useState(false);
+  const [found, setFound] = useState<FoundOrder[] | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -53,7 +60,25 @@ export function OrderTracker({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setOrder(null);
+    setFound(null);
     setError("");
+
+    if (forgotMode) {
+      if (!phone.trim() || !name.trim()) {
+        setError("Renseignez le téléphone et le nom utilisés à la commande.");
+        return;
+      }
+      setLoading(true);
+      const list = await findOrdersByPhone(phone, name);
+      setLoading(false);
+      if (!list.length) {
+        setError("Aucune commande trouvée avec ces informations.");
+      } else {
+        setFound(list);
+      }
+      return;
+    }
+
     if (!number.trim() || !phone.trim()) {
       setError("Renseignez le numéro de commande et le téléphone.");
       return;
@@ -68,26 +93,41 @@ export function OrderTracker({
     }
   }
 
+  async function openFound(num: string) {
+    setLoading(true);
+    const result = await trackOrder(num, phone);
+    setLoading(false);
+    if (result) {
+      setNumber(num);
+      setFound(null);
+      setOrder(result);
+    }
+  }
+
   return (
     <div className="rounded-lg border bg-card p-6 shadow-sm">
       <h2 className="text-lg font-semibold text-navy-900">
         Suivi de commande
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Entrez votre numéro de commande et le téléphone renseigné à la commande.
+        {forgotMode
+          ? "Entrez le téléphone et le nom utilisés lors de la commande."
+          : "Entrez votre numéro de commande et le téléphone renseigné à la commande."}
       </p>
 
       <form onSubmit={onSubmit} className="mt-5 flex flex-col gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">
-            Numéro de commande
-          </label>
-          <Input
-            value={number}
-            onChange={(e) => setNumber(e.target.value)}
-            placeholder="PZE-XXXXXXX"
-          />
-        </div>
+        {!forgotMode && (
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Numéro de commande
+            </label>
+            <Input
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              placeholder="PZE-XXXXXXX"
+            />
+          </div>
+        )}
         <div>
           <label className="mb-1 block text-sm font-medium">Téléphone</label>
           <Input
@@ -96,18 +136,79 @@ export function OrderTracker({
             placeholder="Ex : 6XXXXXXXX"
           />
         </div>
+        {forgotMode && (
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Nom utilisé à la commande
+            </label>
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex : Jean Kamdem"
+            />
+          </div>
+        )}
         <Button
           type="submit"
           disabled={loading}
           className="w-full bg-navy-900 text-white hover:bg-navy-700"
         >
           <Search className="mr-1 h-4 w-4" />
-          {loading ? "Recherche…" : "Rechercher"}
+          {loading
+            ? "Recherche…"
+            : forgotMode
+              ? "Retrouver mes commandes"
+              : "Rechercher"}
         </Button>
       </form>
 
+      <button
+        type="button"
+        onClick={() => {
+          setForgotMode(!forgotMode);
+          setError("");
+          setFound(null);
+        }}
+        className="mt-3 w-full text-center text-sm text-sky-700 underline-offset-2 hover:underline"
+      >
+        {forgotMode
+          ? "J'ai mon numéro de commande"
+          : "Numéro de commande oublié ?"}
+      </button>
+
       {error && (
         <p className="mt-4 text-center text-sm text-destructive">{error}</p>
+      )}
+
+      {found && (
+        <ul className="mt-4 space-y-2">
+          {found.map((o) => (
+            <li key={o.number}>
+              <button
+                type="button"
+                onClick={() => openFound(o.number)}
+                className="flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left text-sm transition-colors hover:border-sky-400 hover:bg-sky-50"
+              >
+                <div>
+                  <p className="font-mono font-semibold text-navy-900">
+                    {o.number}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(o.createdAt).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}{" "}
+                    · {STATUS_LABEL[o.status] ?? o.status}
+                  </p>
+                </div>
+                <span className="font-medium text-navy-900">
+                  {formatPrice(o.total)}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
 
       {order && (
