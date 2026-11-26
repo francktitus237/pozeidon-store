@@ -437,26 +437,34 @@ const DEFAULT_AI: AiConfig = {
 export async function getAiConfig(): Promise<AiConfig> {
   try {
     const value = await getSettingRow("ai");
-    if (!value) return DEFAULT_AI;
-    const parsed = JSON.parse(value) as Partial<AiConfig>;
+    const parsed = (value ? JSON.parse(value) : {}) as Partial<AiConfig>;
     return {
+      // Priorité : Réglages admin ; sinon variable d'environnement GEMINI_API_KEY.
       geminiApiKey:
-        typeof parsed.geminiApiKey === "string" ? parsed.geminiApiKey : "",
+        typeof parsed.geminiApiKey === "string" && parsed.geminiApiKey
+          ? parsed.geminiApiKey
+          : (process.env.GEMINI_API_KEY ?? ""),
       model:
         typeof parsed.model === "string" && parsed.model
           ? parsed.model
-          : DEFAULT_AI.model,
+          : (process.env.GEMINI_MODEL ?? DEFAULT_AI.model),
       ttsModel:
         typeof parsed.ttsModel === "string" && parsed.ttsModel
           ? parsed.ttsModel
-          : DEFAULT_AI.ttsModel,
+          : (process.env.GEMINI_TTS_MODEL ?? DEFAULT_AI.ttsModel),
       ttsVoice:
         typeof parsed.ttsVoice === "string" && parsed.ttsVoice
           ? parsed.ttsVoice
-          : DEFAULT_AI.ttsVoice,
+          : (process.env.GEMINI_TTS_VOICE ?? DEFAULT_AI.ttsVoice),
     };
   } catch {
-    return DEFAULT_AI;
+    return {
+      ...DEFAULT_AI,
+      geminiApiKey: process.env.GEMINI_API_KEY ?? "",
+      model: process.env.GEMINI_MODEL ?? DEFAULT_AI.model,
+      ttsModel: process.env.GEMINI_TTS_MODEL ?? DEFAULT_AI.ttsModel,
+      ttsVoice: process.env.GEMINI_TTS_VOICE ?? DEFAULT_AI.ttsVoice,
+    };
   }
 }
 
